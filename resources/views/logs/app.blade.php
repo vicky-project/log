@@ -111,7 +111,6 @@
         <div class="log-table-container">
           <table class="table table-hover log-table" id="logTable">
             <thead>
-              32
               <th data-sort="timestamp">Timestamp <i class="bi bi-arrow-down-up"></i></th>
               <th data-sort="env">Environment <i class="bi bi-arrow-down-up"></i></th>
               <th data-sort="type">Type <i class="bi bi-arrow-down-up"></i></th>
@@ -119,7 +118,6 @@
             </tr>
           </thead>
           <tbody id="logTableBody">
-            32
             <td colspan="4" class="text-center text-muted">Pilih tanggal untuk menampilkan log</td>
           </tr>
         </tbody>
