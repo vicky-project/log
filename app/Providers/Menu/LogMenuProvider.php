@@ -27,7 +27,7 @@ class LogMenuProvider extends BaseMenuProvider
     return [
       $this->item([
         "title" => "Log Management",
-        "icon" => "bi bi-bug",
+        "icon" => "bi bi-file-text-fill",
         "type" => "dropdown",
         "order" => 50,
         "children" => [
