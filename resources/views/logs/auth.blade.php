@@ -52,7 +52,7 @@
                 </td>
                 <td>
                   <nobr>
-                    @can(Permission::VIEW_AUTHLOGS)
+                    @can(Permission::VIEW_AUTH_LOGS)
                     <a href="{{ route('admin.logs.auth.show', ['auth_log' => $log['id']]) }}" class="btn btn-outline-primary" title="View">
                       <i class="bi bi-eye"></i>
                     </a>
