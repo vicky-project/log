@@ -4,7 +4,6 @@ namespace Modules\Log\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class AppLogController extends Controller
 {
@@ -12,10 +11,7 @@ class AppLogController extends Controller
   * Display a listing of the resource.
   */
   public function index() {
-    $logs = Http::get(config('app.url') . "/" . config('laravel-log-reader.api_route_path'))->json();
-
-    dd($logs);
-    return view('log::index');
+    return view('log::logs.app');
   }
 
   /**
