@@ -1,6 +1,4 @@
-{{-- resources/views/admin/log-reader.blade.php --}}
-@extends('coreui::layouts.admin') {{-- Sesuaikan dengan layout Anda --}}
-
+@extends('coreui::layouts.admin')
 @section('title', 'Log Reader')
 
 @push('styles')
