@@ -1,240 +1,462 @@
-@extends('coreui::layouts.mini-app')
-@section('title', 'Log Viewer')
+{{-- resources/views/admin/log-reader.blade.php --}}
+@extends('coreui::layouts.admin') {{-- Sesuaikan dengan layout Anda --}}
+
+@section('title', 'Log Reader')
+
+@push('styles')
+<style>
+  /* Tambahan style untuk log reader */
+  .log-table-container {
+    overflow-x: auto;
+  }
+  .log-table {
+    font-size: 0.9rem;
+  }
+  .log-table th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .log-table th i {
+    margin-left: 5px;
+    font-size: 0.8rem;
+  }
+  .log-type-INFO {
+    color: #0d6efd;
+    font-weight: 500;
+  }
+  .log-type-ERROR {
+    color: #dc3545;
+    font-weight: 500;
+  }
+  .log-type-WARNING {
+    color: #ffc107;
+    font-weight: 500;
+  }
+  .log-type-DEBUG {
+    color: #6c757d;
+    font-weight: 500;
+  }
+  .search-box {
+    max-width: 300px;
+  }
+  .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .loading-overlay {
+    position: relative;
+    min-height: 200px;
+  }
+  .loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+  }
+  .pagination .page-link {
+    cursor: pointer;
+  }
+  @media (max-width: 768px) {
+    .filter-group {
+      width: 100%;
+    }
+    .filter-group select, .filter-group .input-group {
+      flex: 1;
+    }
+  }
+</style>
+@endpush
 
 @section('content')
-<div class="container py-3">
-  <div class="row justify-content-center">
-    <div class="col-md-12">
-      <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-          <h4 class="mb-0"><i class="bi bi-journal-code me-2"></i>Log Viewer</h4>
-        </div>
-        <div class="card-body">
-          <!-- Filter bar -->
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <div class="input-group">
-                <label class="input-group-text" for="dateFilter">Tanggal</label>
-                <select id="dateFilter" class="form-select">
-                  <option value="">Semua</option>
-                </select>
-
-                <label class="input-group-text ms-2" for="levelFilter">Tipe</label>
-                <select id="levelFilter" class="form-select">
-                  <option value="">Semua</option>
-                  <option value="DEBUG">DEBUG</option>
-                  <option value="INFO">INFO</option>
-                  <option value="NOTICE">NOTICE</option>
-                  <option value="WARNING">WARNING</option>
-                  <option value="ERROR">ERROR</option>
-                  <option value="CRITICAL">CRITICAL</option>
-                  <option value="ALERT">ALERT</option>
-                  <option value="EMERGENCY">EMERGENCY</option>
-                </select>
-
-                <button id="resetBtn" class="btn btn-outline-secondary ms-2">Reset</button>
-              </div>
-            </div>
-            <div class="col-md-6 text-end">
-              <span id="resultCount" class="text-muted"></span>
-            </div>
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h5 class="mb-0">
+          <i class="bi bi-file-text-fill me-2"></i> Log Reader
+        </h5>
+        <div class="filter-group">
+          <!-- Filter Tanggal -->
+          <select id="logDateSelect" class="form-select" style="width: auto; min-width: 130px;">
+            <option value="">Memuat tanggal...</option>
+          </select>
+          <!-- Filter Type Log -->
+          <select id="logTypeSelect" class="form-select" style="width: auto; min-width: 120px;">
+            <option value="">Semua Type</option>
+          </select>
+          <!-- Pencarian -->
+          <div class="input-group search-box">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari log...">
           </div>
-
-          <!-- Loading spinner -->
-          <div id="loadingSpinner" class="text-center py-5" style="display: none;">
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Loading / Error -->
+        <div id="logLoader" class="loading-overlay text-center py-5 d-none">
+          <div class="loading-spinner">
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
+            <p class="mt-2">
+              Memuat data log...
+            </p>
           </div>
-
-          <!-- Log entries container -->
-          <div id="logsContainer">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th style="width: 20%">Tanggal</th>
-                  <th style="width: 10%">Tipe</th>
-                  <th>Pesan</th>
-                </tr>
-              </thead>
-              <tbody id="logsTableBody">
-                <tr><td colspan="3" class="text-center text-muted">Belum ada data</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination controls -->
-          <nav aria-label="Log pagination" class="mt-3">
-            <ul class="pagination justify-content-center" id="paginationControls"></ul>
-          </nav>
         </div>
-      </div>
+        <div id="logError" class="alert alert-danger d-none" role="alert"></div>
+
+        <!-- Tabel log -->
+        <div class="log-table-container">
+          <table class="table table-hover log-table" id="logTable">
+            <thead>
+              32
+              <th data-sort="timestamp">Timestamp <i class="bi bi-arrow-down-up"></i></th>
+              <th data-sort="env">Environment <i class="bi bi-arrow-down-up"></i></th>
+              <th data-sort="type">Type <i class="bi bi-arrow-down-up"></i></th>
+              <th data-sort="message">Message <i class="bi bi-arrow-down-up"></i></th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody">
+            32
+            <td colspan="4" class="text-center text-muted">Pilih tanggal untuk menampilkan log</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <div id="paginationInfo" class="text-muted small"></div>
+      <nav>
+        <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+      </nav>
     </div>
   </div>
+</div>
+</div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-  // Global data
-  let allLogs = [];
-  let filteredLogs = [];
-  let currentPage = 1;
-  const rowsPerPage = 50;
+document.addEventListener('DOMContentLoaded', function () {
+// Elemen DOM
+const logDateSelect = document.getElementById('logDateSelect');
+const logTypeSelect = document.getElementById('logTypeSelect');
+const searchInput = document.getElementById('searchInput');
+const logTableBody = document.getElementById('logTableBody');
+const logLoader = document.getElementById('logLoader');
+const logError = document.getElementById('logError');
+const paginationInfo = document.getElementById('paginationInfo');
+const paginationControls = document.getElementById('paginationControls');
+const tableHeaders = document.querySelectorAll('#logTable th[data-sort]');
 
-  // DOM elements
-  const dateFilter = document.getElementById('dateFilter');
-  const levelFilter = document.getElementById('levelFilter');
-  const resetBtn = document.getElementById('resetBtn');
-  const logsTableBody = document.getElementById('logsTableBody');
-  const paginationControls = document.getElementById('paginationControls');
-  const loadingSpinner = document.getElementById('loadingSpinner');
-  const resultCount = document.getElementById('resultCount');
+// State
+let originalLogs = [];          // Semua log dari API
+let logsByDate = {};            // Objek: key=YYYY-MM-DD, value=array log
+let availableDates = [];         // Array tanggal yang tersedia
+let uniqueTypes = [];            // Array type unik (INFO, ERROR, dll)
+let currentDate = '';            // Tanggal yang sedang dipilih
+let currentType = '';             // Type yang dipilih (kosong = semua)
+let currentFilteredLogs = [];    // Hasil filter setelah sorting dan pencarian (berdasarkan tanggal + type + search)
+let currentSort = { column: 'timestamp', direction: 'desc' };
+let currentPage = 1;
+const rowsPerPage = 15;
 
-  // Fetch data dari endpoint
-  async function fetchLogs() {
-    loadingSpinner.style.display = 'block';
-    try {
-      const response = await fetch('https://vickyserver.my.id/app/admin/api/log-reader');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      // Pastikan data berupa array
-      allLogs = Array.isArray(data) ? data: [];
-      // Urutkan berdasarkan tanggal descending (terbaru di atas)
-      allLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
-      populateDateFilter();
-      applyFilters();
-    } catch (error) {
-      console.error('Error fetching logs:', error);
-      logsTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Gagal memuat data log. Periksa koneksi atau autentikasi.</td></tr>';
-    } finally {
-      loadingSpinner.style.display = 'none';
-    }
-  }
+const API_URL = 'https://vickyserver.my.id/app/admin/api/log-reader';
 
-  // Isi dropdown tanggal dengan nilai unik dari data
-  function populateDateFilter() {
-    const dates = [...new Set(allLogs.map(log => log.date?.split(' ')[0] || ''))].filter(d => d).sort().reverse();
-    dateFilter.innerHTML = '<option value="">Semua</option>' +
-    dates.map(d => `<option value="${d}">${d}</option>`).join('');
-  }
+// Helper: ekstrak tanggal dari timestamp (format "YYYY-MM-DD HH:MM:SS")
+function getDateFromTimestamp(timestamp) {
+if (!timestamp) return '';
+return timestamp.substring(0, 10);
+}
 
-  // Filter berdasarkan tanggal dan level
-  function applyFilters() {
-    const selectedDate = dateFilter.value;
-    const selectedLevel = levelFilter.value;
+// Tampilkan loading / error
+function showLoading(show) {
+if (show) {
+logLoader.classList.remove('d-none');
+logTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Memuat...</td></tr>';
+logError.classList.add('d-none');
+} else {
+logLoader.classList.add('d-none');
+}
+}
 
-    filteredLogs = allLogs.filter(log => {
-    const logDate = log.date?.split(' ')[0] || '';
-    const matchesDate = !selectedDate || logDate === selectedDate;
-    const matchesLevel = !selectedLevel || log.level === selectedLevel;
-    return matchesDate && matchesLevel;
-    });
+function showError(message) {
+logError.textContent = message;
+logError.classList.remove('d-none');
+logTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Gagal memuat data</td></tr>';
+paginationControls.innerHTML = '';
+paginationInfo.textContent = '';
+}
 
-    resultCount.textContent = `Menampilkan ${filteredLogs.length} dari ${allLogs.length} log`;
-    currentPage = 1;
-    renderCurrentPage();
-    renderPaginationControls();
-  }
+// Fetch data sekali
+async function fetchLogs() {
+showLoading(true);
+try {
+const response = await fetch(API_URL);
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
 
-  // Render tabel untuk halaman saat ini
-  function renderCurrentPage() {
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageLogs = filteredLogs.slice(start, end);
+if (!result.success) throw new Error(result.message || 'Gagal mengambil data');
 
-    if (pageLogs.length === 0) {
-      logsTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Tidak ada log yang cocok.</td></tr>';
-      return;
-    }
+const data = result.data;
+originalLogs = data.logs || [];
 
-    logsTableBody.innerHTML = pageLogs.map(log => `
-    <tr>
-    <td class="text-nowrap">${escapeHtml(log.date || '')}</td>
-    <td><span class="badge bg-${getLevelBadgeClass(log.level)}">${escapeHtml(log.level || '')}</span></td>
-    <td>${escapeHtml(log.message || '')}</td>
-    </tr>
-    `).join('');
-  }
+// Kelompokkan log berdasarkan tanggal (dari timestamp)
+logsByDate = {};
+originalLogs.forEach(log => {
+const date = getDateFromTimestamp(log.timestamp);
+if (!logsByDate[date]) logsByDate[date] = [];
+logsByDate[date].push(log);
+});
 
-  // Helper untuk warna badge
-  function getLevelBadgeClass(level) {
-    switch (level) {
-      case 'DEBUG': return 'secondary';
-      case 'INFO': return 'info';
-      case 'NOTICE': return 'light';
-      case 'WARNING': return 'warning';
-      case 'ERROR': return 'danger';
-      case 'CRITICAL': return 'danger';
-      case 'ALERT': return 'danger';
-      case 'EMERGENCY': return 'danger';
-      default: return 'secondary';
-    }
-  }
+// Ambil daftar tanggal unik (urut descending)
+availableDates = Object.keys(logsByDate).sort().reverse();
+if (availableDates.length === 0) {
+throw new Error('Tidak ada data log yang ditemukan');
+}
 
-  // Render pagination
-  function renderPaginationControls() {
-    const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
-    if (totalPages <= 1) {
-      paginationControls.innerHTML = '';
-      return;
-    }
+// Ambil daftar type unik dari semua log
+const typeSet = new Set();
+originalLogs.forEach(log => {
+if (log.type) typeSet.add(log.type);
+});
+uniqueTypes = Array.from(typeSet).sort();
 
-    let html = '';
-    // Previous button
-    html += `<li class="page-item ${currentPage === 1 ? 'disabled': ''}">
-    <a class="page-link" href="#" data-page="${currentPage - 1}">«</a>
-    </li>`;
-    // Page numbers
-    for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-        html += `<li class="page-item ${i === currentPage ? 'active': ''}">
-        <a class="page-link" href="#" data-page="${i}">${i}</a>
-        </li>`;
-      } else if (i === currentPage - 3 || i === currentPage + 3) {
-        html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-      }
-    }
-    // Next button
-    html += `<li class="page-item ${currentPage === totalPages ? 'disabled': ''}">
-    <a class="page-link" href="#" data-page="${currentPage + 1}">»</a>
-    </li>`;
+// Update dropdown tanggal dan type
+updateDateDropdown();
+updateTypeDropdown();
 
-    paginationControls.innerHTML = html;
+// Tentukan tanggal default: yang pertama di dropdown (terbaru)
+currentDate = availableDates[0];
+logDateSelect.value = currentDate;
 
-    // Attach event listeners to pagination links
-    document.querySelectorAll('#paginationControls .page-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-    e.preventDefault();
-    const page = parseInt(link.dataset.page);
-    if (page && page !== currentPage && page >= 1 && page <= totalPages) {
-    currentPage = page;
-    renderCurrentPage();
-    renderPaginationControls();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    });
-    });
-  }
+// Reset filter lainnya
+currentType = '';
+logTypeSelect.value = '';
+searchInput.value = '';
+currentSort = { column: 'timestamp', direction: 'desc' };
+currentPage = 1;
 
-  // Helper untuk menghindari XSS
-  function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+// Terapkan semua filter
+applyFilters();
 
-  // Event listeners untuk filter
-  dateFilter.addEventListener('change', () => applyFilters());
-  levelFilter.addEventListener('change', () => applyFilters());
-  resetBtn.addEventListener('click', () => {
-  dateFilter.value = '';
-  levelFilter.value = '';
-  applyFilters();
-  });
+} catch (err) {
+console.error(err);
+showError(err.message || 'Terjadi kesalahan saat mengambil data');
+} finally {
+showLoading(false);
+}
+}
 
-  // Inisialisasi
-  fetchLogs();
+// Update dropdown tanggal
+function updateDateDropdown() {
+logDateSelect.innerHTML = '';
+availableDates.forEach(date => {
+const option = document.createElement('option');
+option.value = date;
+option.textContent = date;
+logDateSelect.appendChild(option);
+});
+}
+
+// Update dropdown type
+function updateTypeDropdown() {
+logTypeSelect.innerHTML = '<option value="">Semua Type</option>';
+uniqueTypes.forEach(type => {
+const option = document.createElement('option');
+option.value = type;
+option.textContent = type;
+logTypeSelect.appendChild(option);
+});
+}
+
+// Fungsi utama filter: tanggal + type + pencarian
+function applyFilters() {
+// 1. Ambil log berdasarkan tanggal
+let filtered = logsByDate[currentDate] || [];
+
+// 2. Filter berdasarkan type (jika dipilih)
+if (currentType !== '') {
+filtered = filtered.filter(log => log.type === currentType);
+}
+
+// 3. Filter berdasarkan pencarian (teks bebas)
+const searchTerm = searchInput.value.trim().toLowerCase();
+if (searchTerm !== '') {
+filtered = filtered.filter(log => {
+return (log.timestamp && log.timestamp.toLowerCase().includes(searchTerm)) ||
+(log.env && log.env.toLowerCase().includes(searchTerm)) ||
+(log.type && log.type.toLowerCase().includes(searchTerm)) ||
+(log.message && log.message.toLowerCase().includes(searchTerm));
+});
+}
+
+currentFilteredLogs = filtered;
+// Urutkan
+sortLogs();
+// Reset ke halaman pertama
+currentPage = 1;
+renderTable();
+}
+
+// Sorting berdasarkan currentSort
+function sortLogs() {
+const { column, direction } = currentSort;
+currentFilteredLogs.sort((a, b) => {
+let valA = a[column] || '';
+let valB = b[column] || '';
+if (column === 'timestamp') {
+return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+}
+valA = valA.toString().toLowerCase();
+valB = valB.toString().toLowerCase();
+return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+});
+}
+
+// Render tabel dengan paginasi
+function renderTable() {
+const start = (currentPage - 1) * rowsPerPage;
+const end = start + rowsPerPage;
+const pageLogs = currentFilteredLogs.slice(start, end);
+
+if (pageLogs.length === 0) {
+logTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Tidak ada log ditemukan</td></tr>';
+paginationControls.innerHTML = '';
+paginationInfo.textContent = '';
+return;
+}
+
+let html = '';
+pageLogs.forEach(log => {
+let typeClass = '';
+if (log.type === 'INFO') typeClass = 'log-type-INFO';
+else if (log.type === 'ERROR') typeClass = 'log-type-ERROR';
+else if (log.type === 'WARNING') typeClass = 'log-type-WARNING';
+else if (log.type === 'DEBUG') typeClass = 'log-type-DEBUG';
+
+html += `
+<tr>
+<td class="text-nowrap">${escapeHtml(log.timestamp || '-')}</td>
+<td>${escapeHtml(log.env || '-')}</td>
+<td><span class="${typeClass}">${escapeHtml(log.type || '-')}</span></td>
+<td>${escapeHtml(log.message || '-')}</td>
+</tr>
+`;
+});
+logTableBody.innerHTML = html;
+
+// Pagination
+const totalPages = Math.ceil(currentFilteredLogs.length / rowsPerPage);
+updatePaginationControls(totalPages);
+paginationInfo.textContent = `Menampilkan ${start+1} - ${Math.min(end, currentFilteredLogs.length)} dari ${currentFilteredLogs.length} log`;
+}
+
+// Update tombol pagination
+function updatePaginationControls(totalPages) {
+if (totalPages <= 1) {
+paginationControls.innerHTML = '';
+return;
+}
+
+let pagesHtml = '';
+// Prev
+pagesHtml += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+<a class="page-link" data-page="${currentPage-1}" href="#">«</a>
+</li>`;
+
+let startPage = Math.max(1, currentPage - 2);
+let endPage = Math.min(totalPages, startPage + 4);
+if (endPage - startPage < 4 && startPage > 1) startPage = Math.max(1, endPage - 4);
+
+for (let i = startPage; i <= endPage; i++) {
+pagesHtml += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+<a class="page-link" data-page="${i}" href="#">${i}</a>
+</li>`;
+}
+
+// Next
+pagesHtml += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+<a class="page-link" data-page="${currentPage+1}" href="#">»</a>
+</li>`;
+
+paginationControls.innerHTML = pagesHtml;
+
+// Attach event listener ke tombol pagination
+document.querySelectorAll('#paginationControls .page-link').forEach(link => {
+link.addEventListener('click', (e) => {
+e.preventDefault();
+const page = parseInt(link.getAttribute('data-page'));
+if (!isNaN(page) && page >= 1 && page <= totalPages && page !== currentPage) {
+currentPage = page;
+renderTable();
+}
+});
+});
+}
+
+// Escape HTML untuk keamanan
+function escapeHtml(str) {
+if (!str) return '';
+return str.replace(/[&<>]/g, function(m) {
+if (m === '&') return '&amp;';
+if (m === '<') return '&lt;';
+if (m === '>') return '&gt;';
+return m;
+});
+}
+
+// Event listeners
+logDateSelect.addEventListener('change', function() {
+currentDate = this.value;
+applyFilters();
+});
+
+logTypeSelect.addEventListener('change', function() {
+currentType = this.value;
+applyFilters();
+});
+
+searchInput.addEventListener('input', function() {
+applyFilters();
+});
+
+tableHeaders.forEach(header => {
+header.addEventListener('click', () => {
+const column = header.getAttribute('data-sort');
+if (currentSort.column === column) {
+currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+} else {
+currentSort.column = column;
+currentSort.direction = 'asc';
+}
+sortLogs();
+currentPage = 1;
+renderTable();
+updateSortIcons(column);
+});
+});
+
+function updateSortIcons(activeColumn) {
+tableHeaders.forEach(th => {
+const col = th.getAttribute('data-sort');
+const icon = th.querySelector('i');
+if (col === activeColumn) {
+icon.className = currentSort.direction === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
+} else {
+icon.className = 'bi bi-arrow-down-up';
+}
+});
+}
+
+// Mulai ambil data
+fetchLogs();
+});
 </script>
 @endpush
