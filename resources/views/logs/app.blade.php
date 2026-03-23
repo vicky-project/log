@@ -95,11 +95,7 @@
   async function fetchLogs() {
     loadingSpinner.style.display = 'block';
     try {
-      const response = await fetch('https://vickyserver.my.id/app/admin/api/log-reader', {
-        headers: {
-          'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ''
-        }
-      });
+      const response = await fetch('https://vickyserver.my.id/app/admin/api/log-reader');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       // Pastikan data berupa array
