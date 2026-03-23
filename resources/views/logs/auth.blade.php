@@ -1,8 +1,6 @@
 @extends('coreui::layouts.admin')
-
-@use('Modules\Log\Constants\Permission')
-
 @section('title', 'User Authentication Log')
+@use('Modules\Log\Constants\Permission')
 
 @section('content')
 <div class="row">
@@ -42,7 +40,7 @@
                 </td>
                 <td>{{$log["user_agent"]}}</td>
                 <td>
-                  <span class="badge @if($log['login_successful']) badge-success @else badge-danger @endif">
+                  <span class="badge @if($log['login_successful']) bg-success @else bg-danger @endif">
                     @if($log["login_successful"])
                     Yes
                     @else
