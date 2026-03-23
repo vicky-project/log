@@ -16,7 +16,7 @@ class PostInstallation
 
     } catch (\Exception $e) {
       logger()->error(
-        "Failed to run post installation of object task module: " .
+        "Failed to run post installation of log module: " .
         $e->getMessage(),
       );
 
