@@ -42,7 +42,7 @@ class LogMenuProvider extends BaseMenuProvider
             "title" => "Auth Log",
             "icon" => "bi bi-door",
             "route" => "admin.logs.auth",
-            "order" => 1,
+            "order" => 2,
             "permission" => Permission::VIEW_AUTH_LOGS,
           ]),
         ],
