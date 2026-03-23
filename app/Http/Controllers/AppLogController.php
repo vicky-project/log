@@ -12,7 +12,7 @@ class AppLogController extends Controller
   * Display a listing of the resource.
   */
   public function index() {
-    $logs = Http::get(config('app.url').config('laravel-log-reader.api_route_path'))->json();
+    $logs = Http::get(config('app.url') . "/" . config('laravel-log-reader.api_route_path'))->json();
 
     dd($logs);
     return view('log::index');
