@@ -11,7 +11,7 @@ $browser = $agent->platform() . " - " . $agent->browser();
 <div class="card">
   <div class="card-header text-end">
     <div class="float-start me-auto">
-      <a href="{{ route('logmanagement.authlog.index') }}" class="btn btn-secondary">
+      <a href="{{ route('admin.logs.auth') }}" class="btn btn-secondary">
         <i class="bi bi-arrow-left"></i>
       </a>
     </div>
