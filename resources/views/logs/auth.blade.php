@@ -1,6 +1,6 @@
 @extends('coreui::layouts.admin')
 
-@use('Modules\LogManagement\Constants\Permissions')
+@use('Modules\Log\Constants\Permission')
 
 @section('title', 'User Authentication Log')
 
@@ -52,7 +52,7 @@
                 </td>
                 <td>
                   <nobr>
-                    @can(Permissions::VIEW_AUTHLOG)
+                    @can(Permission::VIEW_AUTHLOGS)
                     <a href="{{ route('admin.logs.auth.show', ['auth_log' => $log['id']]) }}" class="btn btn-outline-primary" title="View">
                       <i class="bi bi-eye"></i>
                     </a>

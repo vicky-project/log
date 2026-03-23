@@ -3,7 +3,7 @@ namespace Modules\Log\Constants;
 
 class Permission {
   const VIEW_APP_LOGS = "logs.app.index";
-  const VIEW_AUTH_LOG = "logs.auth.index";
+  const VIEW_AUTH_LOGS = "logs.auth.index";
 
   public static function all():array {
     return [

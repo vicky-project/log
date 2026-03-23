@@ -44,4 +44,12 @@ class AuthLogController extends Controller
     });
     return view('log::logs.auth', compact('logs'));
   }
+
+  /**
+  * Show the specified resource.
+  */
+  public function show(AuthenticationLog $auth_log) {
+    return view("log::logs.show-authlog", compact("auth_log"));
+  }
+
 }
