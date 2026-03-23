@@ -38,6 +38,13 @@ class LogMenuProvider extends BaseMenuProvider
             "order" => 1,
             "permission" => Permission::VIEW_APP_LOGS,
           ]),
+          $this->item([
+            "title" => "Auth Log",
+            "icon" => "bi bi-door",
+            "route" => "admin.logs.auth",
+            "order" => 1,
+            "permission" => Permission::VIEW_AUTH_LOGS,
+          ]),
         ],
       ]),
     ];
