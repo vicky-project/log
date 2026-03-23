@@ -13,7 +13,7 @@ class AuthLogController extends Controller
   * Display a listing of the resource.
   */
   public function index() {
-    $logs = AuthenticationLog::latest("login_at")
+    $logs = AuthenticationLog::with('authenticatable')->latest("login_at")
     ->get()
     ->map(function ($log) {
       $agent = tap(
