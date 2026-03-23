@@ -51,5 +51,4 @@ class AuthLogController extends Controller
   public function show(AuthenticationLog $auth_log) {
     return view("log::logs.show-authlog", compact("auth_log"));
   }
-
 }

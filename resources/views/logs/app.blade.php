@@ -3,7 +3,7 @@
 
 @push('styles')
 <style>
-  /* Tambahan style untuk log reader */
+  /* Tambahan style */
   .log-table-container {
     overflow-x: auto;
   }
@@ -82,6 +82,10 @@
           <select id="logDateSelect" class="form-select" style="width: auto; min-width: 130px;">
             <option value="">Memuat tanggal...</option>
           </select>
+          <!-- Filter Environment -->
+          <select id="logEnvSelect" class="form-select" style="width: auto; min-width: 130px;">
+            <option value="">Semua Environment</option>
+          </select>
           <!-- Filter Type Log -->
           <select id="logTypeSelect" class="form-select" style="width: auto; min-width: 120px;">
             <option value="">Semua Type</option>
@@ -142,6 +146,7 @@
 document.addEventListener('DOMContentLoaded', function () {
 // Elemen DOM
 const logDateSelect = document.getElementById('logDateSelect');
+const logEnvSelect = document.getElementById('logEnvSelect');
 const logTypeSelect = document.getElementById('logTypeSelect');
 const searchInput = document.getElementById('searchInput');
 const logTableBody = document.getElementById('logTableBody');
@@ -155,10 +160,12 @@ const tableHeaders = document.querySelectorAll('#logTable th[data-sort]');
 let originalLogs = [];          // Semua log dari API
 let logsByDate = {};            // Objek: key=YYYY-MM-DD, value=array log
 let availableDates = [];         // Array tanggal yang tersedia
-let uniqueTypes = [];            // Array type unik (INFO, ERROR, dll)
+let uniqueEnvs = [];             // Array environment unik
+let uniqueTypes = [];            // Array type unik
 let currentDate = '';            // Tanggal yang sedang dipilih
-let currentType = '';             // Type yang dipilih (kosong = semua)
-let currentFilteredLogs = [];    // Hasil filter setelah sorting dan pencarian (berdasarkan tanggal + type + search)
+let currentEnv = '';             // Environment yang dipilih (kosong = semua)
+let currentType = '';            // Type yang dipilih (kosong = semua)
+let currentFilteredLogs = [];    // Hasil filter setelah sorting dan pencarian
 let currentSort = { column: 'timestamp', direction: 'desc' };
 let currentPage = 1;
 const rowsPerPage = 15;
@@ -217,6 +224,13 @@ if (availableDates.length === 0) {
 throw new Error('Tidak ada data log yang ditemukan');
 }
 
+// Ambil daftar environment unik dari semua log
+const envSet = new Set();
+originalLogs.forEach(log => {
+if (log.env) envSet.add(log.env);
+});
+uniqueEnvs = Array.from(envSet).sort();
+
 // Ambil daftar type unik dari semua log
 const typeSet = new Set();
 originalLogs.forEach(log => {
@@ -224,8 +238,9 @@ if (log.type) typeSet.add(log.type);
 });
 uniqueTypes = Array.from(typeSet).sort();
 
-// Update dropdown tanggal dan type
+// Update dropdown tanggal, environment, type
 updateDateDropdown();
+updateEnvDropdown();
 updateTypeDropdown();
 
 // Tentukan tanggal default: yang pertama di dropdown (terbaru)
@@ -233,6 +248,8 @@ currentDate = availableDates[0];
 logDateSelect.value = currentDate;
 
 // Reset filter lainnya
+currentEnv = '';
+logEnvSelect.value = '';
 currentType = '';
 logTypeSelect.value = '';
 searchInput.value = '';
@@ -261,6 +278,17 @@ logDateSelect.appendChild(option);
 });
 }
 
+// Update dropdown environment
+function updateEnvDropdown() {
+logEnvSelect.innerHTML = '<option value="">Semua Environment</option>';
+uniqueEnvs.forEach(env => {
+const option = document.createElement('option');
+option.value = env;
+option.textContent = env;
+logEnvSelect.appendChild(option);
+});
+}
+
 // Update dropdown type
 function updateTypeDropdown() {
 logTypeSelect.innerHTML = '<option value="">Semua Type</option>';
@@ -272,17 +300,22 @@ logTypeSelect.appendChild(option);
 });
 }
 
-// Fungsi utama filter: tanggal + type + pencarian
+// Fungsi utama filter: tanggal + environment + type + pencarian
 function applyFilters() {
 // 1. Ambil log berdasarkan tanggal
 let filtered = logsByDate[currentDate] || [];
 
-// 2. Filter berdasarkan type (jika dipilih)
+// 2. Filter berdasarkan environment (jika dipilih)
+if (currentEnv !== '') {
+filtered = filtered.filter(log => log.env === currentEnv);
+}
+
+// 3. Filter berdasarkan type (jika dipilih)
 if (currentType !== '') {
 filtered = filtered.filter(log => log.type === currentType);
 }
 
-// 3. Filter berdasarkan pencarian (teks bebas)
+// 4. Filter berdasarkan pencarian (teks bebas)
 const searchTerm = searchInput.value.trim().toLowerCase();
 if (searchTerm !== '') {
 filtered = filtered.filter(log => {
@@ -397,6 +430,19 @@ renderTable();
 });
 }
 
+// Update ikon sort pada header tabel
+function updateSortIcons(activeColumn) {
+tableHeaders.forEach(th => {
+const col = th.getAttribute('data-sort');
+const icon = th.querySelector('i');
+if (col === activeColumn) {
+icon.className = currentSort.direction === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
+} else {
+icon.className = 'bi bi-arrow-down-up';
+}
+});
+}
+
 // Escape HTML untuk keamanan
 function escapeHtml(str) {
 if (!str) return '';
@@ -414,6 +460,11 @@ currentDate = this.value;
 applyFilters();
 });
 
+logEnvSelect.addEventListener('change', function() {
+currentEnv = this.value;
+applyFilters();
+});
+
 logTypeSelect.addEventListener('change', function() {
 currentType = this.value;
 applyFilters();
@@ -423,6 +474,7 @@ searchInput.addEventListener('input', function() {
 applyFilters();
 });
 
+// Sorting via header klik
 tableHeaders.forEach(header => {
 header.addEventListener('click', () => {
 const column = header.getAttribute('data-sort');
@@ -438,18 +490,6 @@ renderTable();
 updateSortIcons(column);
 });
 });
-
-function updateSortIcons(activeColumn) {
-tableHeaders.forEach(th => {
-const col = th.getAttribute('data-sort');
-const icon = th.querySelector('i');
-if (col === activeColumn) {
-icon.className = currentSort.direction === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
-} else {
-icon.className = 'bi bi-arrow-down-up';
-}
-});
-}
 
 // Mulai ambil data
 fetchLogs();
