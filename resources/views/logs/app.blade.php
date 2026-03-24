@@ -1,4 +1,4 @@
-@extends('coreui::layouts.mini-app')
+@extends('coreui::layouts.admin')
 @section('title', 'Log Viewer')
 
 @section('content')
