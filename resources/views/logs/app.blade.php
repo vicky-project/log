@@ -68,7 +68,7 @@
                 <th style="min-width: 160px;">Waktu</th>
                 <th style="min-width: 80px;">Tipe</th>
                 <th style="min-width: 80px;">Env</th>
-                <th>Pesan</th>
+                <th style="min-width: 200px;">Pesan</th>
               </tr>
             </thead>
             <tbody id="logsTableBody">
