@@ -2,96 +2,85 @@
 @section('title', 'Log Viewer')
 
 @section('content')
-<div class="container py-3">
-  <div class="row justify-content-center mb-3">
-    <div class="col-md-12">
-      <div class="d-flex justify-content-between align-items-center">
-        <a href="{{ route('telegram.home') }}" class="btn btn-outline-secondary">
-          <i class="bi bi-arrow-left me-2"></i>Kembali
-        </a>
+<div class="row justify-content-center">
+  <div class="col-md-12 col-lg-10">
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-journal-code me-2"></i>Log Viewer</h4>
       </div>
-    </div>
-  </div>
-  <div class="row justify-content-center">
-    <div class="col-md-12 col-lg-10">
-      <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-          <h4 class="mb-0"><i class="bi bi-journal-code me-2"></i>Log Viewer</h4>
+      <div class="card-body">
+        <!-- Filter bar -->
+        <div class="row mb-3 g-2">
+          <div class="col-12 col-sm-6">
+            <div class="input-group">
+              <label class="input-group-text" for="dateSelect">Tanggal</label>
+              <select id="dateSelect" class="form-select">
+                <option value="">Memuat...</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-12 col-sm-3">
+            <div class="input-group">
+              <label class="input-group-text" for="levelSelect">Tipe</label>
+              <select id="levelSelect" class="form-select">
+                <option value="">Semua</option>
+                <option value="DEBUG">DEBUG</option>
+                <option value="INFO">INFO</option>
+                <option value="NOTICE">NOTICE</option>
+                <option value="WARNING">WARNING</option>
+                <option value="ERROR">ERROR</option>
+                <option value="CRITICAL">CRITICAL</option>
+                <option value="ALERT">ALERT</option>
+                <option value="EMERGENCY">EMERGENCY</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-12 col-sm-3">
+            <div class="input-group">
+              <label class="input-group-text" for="envSelect">Env</label>
+              <select id="envSelect" class="form-select">
+                <option value="">Semua</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <!-- Filter bar -->
-          <div class="row mb-3 g-2">
-            <div class="col-12 col-sm-6">
-              <div class="input-group">
-                <label class="input-group-text" for="dateSelect">Tanggal</label>
-                <select id="dateSelect" class="form-select">
-                  <option value="">Memuat...</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-12 col-sm-3">
-              <div class="input-group">
-                <label class="input-group-text" for="levelSelect">Tipe</label>
-                <select id="levelSelect" class="form-select">
-                  <option value="">Semua</option>
-                  <option value="DEBUG">DEBUG</option>
-                  <option value="INFO">INFO</option>
-                  <option value="NOTICE">NOTICE</option>
-                  <option value="WARNING">WARNING</option>
-                  <option value="ERROR">ERROR</option>
-                  <option value="CRITICAL">CRITICAL</option>
-                  <option value="ALERT">ALERT</option>
-                  <option value="EMERGENCY">EMERGENCY</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-12 col-sm-3">
-              <div class="input-group">
-                <label class="input-group-text" for="envSelect">Env</label>
-                <select id="envSelect" class="form-select">
-                  <option value="">Semua</option>
-                </select>
-              </div>
-            </div>
-          </div>
 
-          <!-- Info jumlah log -->
-          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-            <span id="resultCount" class="text-muted"></span>
-            <button id="refreshBtn" class="btn btn-sm btn-outline-secondary">
-              <i class="bi bi-arrow-repeat me-1"></i>Refresh
-            </button>
-          </div>
-
-          <!-- Loading spinner -->
-          <div id="loadingSpinner" class="text-center py-5" style="display: none;">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-          </div>
-
-          <!-- Log entries container with responsive table -->
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th style="min-width: 160px;">Waktu</th>
-                  <th style="min-width: 80px;">Tipe</th>
-                  <th style="min-width: 80px;">Env</th>
-                  <th>Pesan</th>
-                </tr>
-              </thead>
-              <tbody id="logsTableBody">
-                <tr><td colspan="4" class="text-center text-muted">Pilih tanggal untuk melihat log.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination controls -->
-          <nav aria-label="Log pagination" class="mt-3">
-            <ul class="pagination justify-content-center" id="paginationControls"></ul>
-          </nav>
+        <!-- Info jumlah log -->
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <span id="resultCount" class="text-muted"></span>
+          <button id="refreshBtn" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-repeat me-1"></i>Refresh
+          </button>
         </div>
+
+        <!-- Loading spinner -->
+        <div id="loadingSpinner" class="text-center py-5" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+
+        <!-- Log entries container with responsive table -->
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th style="min-width: 160px;">Waktu</th>
+                <th style="min-width: 80px;">Tipe</th>
+                <th style="min-width: 80px;">Env</th>
+                <th>Pesan</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody">
+              <tr><td colspan="4" class="text-center text-muted">Pilih tanggal untuk melihat log.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination controls -->
+        <nav aria-label="Log pagination" class="mt-3">
+          <ul class="pagination justify-content-center" id="paginationControls"></ul>
+        </nav>
       </div>
     </div>
   </div>
