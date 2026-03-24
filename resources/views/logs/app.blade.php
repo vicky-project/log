@@ -246,12 +246,13 @@
     logsTableBody.innerHTML = pageLogs.map(log => {
     let localTime = "";
     if(log.timestamp) {
-    const utcDate = new Date(log.timestamp + 'Z');
+    const utcDate = new Date(log.timestamp);
     if(!isNaN(utcDate)) {
     localTime = utcDate.toLocaleTimeString('id-ID', {
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
+    timeZone: '{{ config("app.timezone") }}'
     });
     } else {
     localTime = log.timestamp.split(' ')[1] || '-';
