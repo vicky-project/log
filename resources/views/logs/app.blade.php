@@ -20,14 +20,18 @@
         </div>
         <div class="card-body">
           <!-- Filter bar -->
-          <div class="row mb-3">
-            <div class="col-md-6">
+          <div class="row mb-3 g-2">
+            <div class="col-12 col-sm-6">
               <div class="input-group">
                 <label class="input-group-text" for="dateSelect">Tanggal</label>
                 <select id="dateSelect" class="form-select">
                   <option value="">Memuat...</option>
                 </select>
-                <label class="input-group-text ms-2" for="levelSelect">Tipe</label>
+              </div>
+            </div>
+            <div class="col-12 col-sm-3">
+              <div class="input-group">
+                <label class="input-group-text" for="levelSelect">Tipe</label>
                 <select id="levelSelect" class="form-select">
                   <option value="">Semua</option>
                   <option value="DEBUG">DEBUG</option>
@@ -41,9 +45,22 @@
                 </select>
               </div>
             </div>
-            <div class="col-md-6 text-end">
-              <span id="resultCount" class="text-muted"></span>
+            <div class="col-12 col-sm-3">
+              <div class="input-group">
+                <label class="input-group-text" for="envSelect">Env</label>
+                <select id="envSelect" class="form-select">
+                  <option value="">Semua</option>
+                </select>
+              </div>
             </div>
+          </div>
+
+          <!-- Info jumlah log -->
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <span id="resultCount" class="text-muted"></span>
+            <button id="refreshBtn" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-arrow-repeat me-1"></i>Refresh
+            </button>
           </div>
 
           <!-- Loading spinner -->
@@ -53,22 +70,21 @@
             </div>
           </div>
 
-          <!-- Log entries container -->
-          <div id="logsContainer">
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th style="width: 20%">Waktu</th>
-                    <th style="width: 10%">Tipe</th>
-                    <th>Pesan</th>
-                  </tr>
-                </thead>
-                <tbody id="logsTableBody">
-                  <tr><td colspan="3" class="text-center text-muted">Pilih tanggal untuk melihat log.</td></tr>
-                </tbody>
-              </table>
-            </div>
+          <!-- Log entries container with responsive table -->
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th style="min-width: 160px;">Waktu</th>
+                  <th style="min-width: 80px;">Tipe</th>
+                  <th style="min-width: 80px;">Env</th>
+                  <th>Pesan</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody">
+                <tr><td colspan="4" class="text-center text-muted">Pilih tanggal untuk melihat log.</td></tr>
+              </tbody>
+            </table>
           </div>
 
           <!-- Pagination controls -->
@@ -86,25 +102,31 @@
 <script>
   // Global state
   let currentDate = '';
-  let allLogs = [];
-  let filteredLogs = [];
+  let allLogs = []; // logs mentah dari API
+  let filteredLogs = []; // setelah filter level & env
   let currentPage = 1;
   const rowsPerPage = 50;
 
   // DOM elements
   const dateSelect = document.getElementById('dateSelect');
   const levelSelect = document.getElementById('levelSelect');
+  const envSelect = document.getElementById('envSelect');
   const logsTableBody = document.getElementById('logsTableBody');
   const paginationControls = document.getElementById('paginationControls');
   const loadingSpinner = document.getElementById('loadingSpinner');
   const resultCount = document.getElementById('resultCount');
+  const refreshBtn = document.getElementById('refreshBtn');
 
   // Base API URL
   const apiUrl = 'https://vickyserver.my.id/app/admin/api/log-reader';
 
-  // Fetch available dates (first request without date)
+  // -----------------------------------------------------------------
+  // 1. Ambil daftar tanggal yang tersedia (tanpa parameter date)
+  // -----------------------------------------------------------------
   async function fetchAvailableDates() {
     loadingSpinner.style.display = 'block';
+    // Bersihkan tabel sebelum loading
+    logsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Memuat daftar tanggal...</td></tr>';
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -113,26 +135,29 @@
       const data = json.data;
       const dates = data.available_log_dates || [];
       populateDateSelect(dates);
-      // If today's date is available, select it and load logs
+      // Jika tanggal hari ini tersedia, pilih langsung
       if (dates.includes(data.date)) {
         dateSelect.value = data.date;
-        loadLogsForDate(data.date);
+        await loadLogsForDate(data.date);
       } else if (dates.length > 0) {
         dateSelect.value = dates[0];
-        loadLogsForDate(dates[0]);
+        await loadLogsForDate(dates[0]);
       } else {
         dateSelect.innerHTML = '<option value="">Tidak ada log tersedia</option>';
+        logsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Tidak ada log untuk tanggal yang tersedia.</td></tr>';
       }
     } catch (error) {
       console.error('Error fetching dates:', error);
       dateSelect.innerHTML = '<option value="">Gagal memuat tanggal</option>';
-      logsTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Gagal memuat data log.</td></tr>';
+      logsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Gagal memuat data log. Periksa koneksi atau autentikasi.</td></tr>';
     } finally {
       loadingSpinner.style.display = 'none';
     }
   }
 
-  // Populate dropdown with available dates
+  // -----------------------------------------------------------------
+  // 2. Isi dropdown tanggal
+  // -----------------------------------------------------------------
   function populateDateSelect(dates) {
     dateSelect.innerHTML = '<option value="">Pilih tanggal</option>';
     dates.forEach(date => {
@@ -143,9 +168,19 @@
     });
   }
 
-  // Load logs for a specific date
+  // -----------------------------------------------------------------
+  // 3. Muat log untuk tanggal tertentu
+  // -----------------------------------------------------------------
   async function loadLogsForDate(date) {
+    // Bersihkan data lama & tampilkan loading
+    allLogs = [];
+    filteredLogs = [];
+    currentPage = 1;
+    logsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Memuat log...</td></tr>';
+    paginationControls.innerHTML = '';
+    resultCount.textContent = '';
     loadingSpinner.style.display = 'block';
+
     try {
       const url = `${apiUrl}?date=${date}`;
       const response = await fetch(url);
@@ -154,22 +189,50 @@
       if (!json.success) throw new Error(json.message || 'Failed to fetch');
       const logs = json.data.logs || [];
       allLogs = logs;
-      applyFilters(); // This will trigger filtering and rendering
+      // Perbarui dropdown environment berdasarkan data
+      updateEnvFilter(logs);
+      // Terapkan filter (awalnya tanpa filter)
+      applyFilters();
     } catch (error) {
       console.error('Error loading logs:', error);
-      logsTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Gagal memuat log untuk tanggal ini.</td></tr>';
+      logsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Gagal memuat log untuk tanggal ini.</td></tr>';
       resultCount.textContent = '';
       paginationControls.innerHTML = '';
+      envSelect.innerHTML = '<option value="">Semua</option>';
     } finally {
       loadingSpinner.style.display = 'none';
     }
   }
 
-  // Filter logs based on selected level
+  // -----------------------------------------------------------------
+  // 4. Update dropdown environment berdasarkan data log
+  // -----------------------------------------------------------------
+  function updateEnvFilter(logs) {
+    const envSet = new Set();
+    logs.forEach(log => {
+    if (log.env) envSet.add(log.env);
+    });
+    const envs = Array.from(envSet).sort();
+    envSelect.innerHTML = '<option value="">Semua</option>';
+    envs.forEach(env => {
+    const option = document.createElement('option');
+    option.value = env;
+    option.textContent = env;
+    envSelect.appendChild(option);
+    });
+  }
+
+  // -----------------------------------------------------------------
+  // 5. Filter berdasarkan level dan env
+  // -----------------------------------------------------------------
   function applyFilters() {
     const selectedLevel = levelSelect.value;
+    const selectedEnv = envSelect.value;
+
     filteredLogs = allLogs.filter(log => {
-    return selectedLevel === '' || log.type === selectedLevel;
+    const matchesLevel = selectedLevel === '' || log.type === selectedLevel;
+    const matchesEnv = selectedEnv === '' || log.env === selectedEnv;
+    return matchesLevel && matchesEnv;
     });
 
     resultCount.textContent = `Menampilkan ${filteredLogs.length} dari ${allLogs.length} log`;
@@ -178,14 +241,16 @@
     renderPaginationControls();
   }
 
-  // Render current page of logs
+  // -----------------------------------------------------------------
+  // 6. Render halaman saat ini
+  // -----------------------------------------------------------------
   function renderCurrentPage() {
     const start = (currentPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     const pageLogs = filteredLogs.slice(start, end);
 
     if (pageLogs.length === 0) {
-      logsTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Tidak ada log yang cocok.</td></tr>';
+      logsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Tidak ada log yang cocok.</td></tr>';
       return;
     }
 
@@ -193,12 +258,13 @@
     <tr>
     <td class="text-nowrap">${escapeHtml(log.timestamp)}</td>
     <td><span class="badge bg-${getLevelBadgeClass(log.type)}">${escapeHtml(log.type)}</span></td>
-    <td>${escapeHtml(log.message)}</td>
+    <td><span class="badge bg-secondary">${escapeHtml(log.env || '-')}</span></td>
+    <td class="text-break">${escapeHtml(log.message)}</td>
     </tr>
     `).join('');
   }
 
-  // Helper for badge color
+  // Helper untuk badge color
   function getLevelBadgeClass(level) {
     switch (level) {
       case 'DEBUG': return 'secondary';
@@ -213,7 +279,9 @@
     }
   }
 
-  // Pagination controls
+  // -----------------------------------------------------------------
+  // 7. Pagination controls
+  // -----------------------------------------------------------------
   function renderPaginationControls() {
     const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
     if (totalPages <= 1) {
@@ -222,7 +290,7 @@
     }
 
     let html = '';
-    // Previous
+    // Previous button
     html += `<li class="page-item ${currentPage === 1 ? 'disabled': ''}">
     <a class="page-link" href="#" data-page="${currentPage - 1}">«</a>
     </li>`;
@@ -236,7 +304,7 @@
         html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
       }
     }
-    // Next
+    // Next button
     html += `<li class="page-item ${currentPage === totalPages ? 'disabled': ''}">
     <a class="page-link" href="#" data-page="${currentPage + 1}">»</a>
     </li>`;
@@ -258,7 +326,9 @@
     });
   }
 
-  // Escape HTML to prevent XSS
+  // -----------------------------------------------------------------
+  // 8. Escape HTML
+  // -----------------------------------------------------------------
   function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -266,18 +336,21 @@
     return div.innerHTML;
   }
 
-  // Event listeners
-  dateSelect.addEventListener('change', () => {
+  // -----------------------------------------------------------------
+  // 9. Event listeners
+  // -----------------------------------------------------------------
+  dateSelect.addEventListener('change', async () => {
   const selected = dateSelect.value;
   if (selected) {
-  loadLogsForDate(selected);
+  await loadLogsForDate(selected);
   } else {
-  // Reset view
+  // Reset tampilan
   allLogs = [];
   filteredLogs = [];
-  logsTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Pilih tanggal untuk melihat log.</td></tr>';
+  logsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Pilih tanggal untuk melihat log.</td></tr>';
   resultCount.textContent = '';
   paginationControls.innerHTML = '';
+  envSelect.innerHTML = '<option value="">Semua</option>';
   }
   });
 
@@ -285,19 +358,45 @@
   applyFilters();
   });
 
-  // Initial load
+  envSelect.addEventListener('change', () => {
+  applyFilters();
+  });
+
+  refreshBtn.addEventListener('click', async () => {
+  if (dateSelect.value) {
+  await loadLogsForDate(dateSelect.value);
+  } else {
+  await fetchAvailableDates();
+  }
+  });
+
+  // -----------------------------------------------------------------
+  // 10. Inisialisasi
+  // -----------------------------------------------------------------
   fetchAvailableDates();
 </script>
 @endpush
 
 @push('styles')
 <style>
-  /* Tema Telegram (sudah diatur oleh layout) */
-  .table th, .table td {
-    border-color: var(--tg-theme-section-separator-color);
+  /* Responsif untuk layar kecil */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .badge {
     font-weight: normal;
+  }
+  /* Teks pesan log bisa wrap */
+  .text-break {
+    word-break: break-word;
+    white-space: normal;
+  }
+  /* Atur min-width kolom agar tidak terlalu sempit di mobile */
+  @media (max-width: 576px) {
+    .table th, .table td {
+      white-space: normal;
+    }
   }
 </style>
 @endpush
