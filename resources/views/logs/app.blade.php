@@ -55,18 +55,20 @@
 
           <!-- Log entries container -->
           <div id="logsContainer">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th style="width: 20%">Waktu</th>
-                  <th style="width: 10%">Tipe</th>
-                  <th>Pesan</th>
-                </tr>
-              </thead>
-              <tbody id="logsTableBody">
-                <tr><td colspan="3" class="text-center text-muted">Pilih tanggal untuk melihat log.</td></tr>
-              </tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th style="width: 20%">Waktu</th>
+                    <th style="width: 10%">Tipe</th>
+                    <th>Pesan</th>
+                  </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                  <tr><td colspan="3" class="text-center text-muted">Pilih tanggal untuk melihat log.</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <!-- Pagination controls -->
