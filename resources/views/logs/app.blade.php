@@ -66,9 +66,9 @@
             <thead>
               <tr>
                 <th style="min-width: 160px;">Waktu</th>
-                <th style="min-width: 80px;">Tipe</th>
                 <th style="min-width: 80px;">Env</th>
-                <th style="min-width: 200px;">Pesan</th>
+                <th style="min-width: 80px;">Tipe</th>
+                <th style="min-width: 500px;">Pesan</th>
               </tr>
             </thead>
             <tbody id="logsTableBody">
@@ -246,8 +246,8 @@
     logsTableBody.innerHTML = pageLogs.map(log => `
     <tr>
     <td class="text-nowrap">${escapeHtml(log.timestamp)}</td>
-    <td><span class="badge bg-${getLevelBadgeClass(log.type)}">${escapeHtml(log.type)}</span></td>
     <td><span class="badge bg-secondary">${escapeHtml(log.env || '-')}</span></td>
+    <td><span class="badge bg-${getLevelBadgeClass(log.type)}">${escapeHtml(log.type)}</span></td>
     <td class="text-break">${escapeHtml(log.message)}</td>
     </tr>
     `).join('');
