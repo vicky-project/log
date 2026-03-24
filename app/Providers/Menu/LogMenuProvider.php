@@ -27,7 +27,7 @@ class LogMenuProvider extends BaseMenuProvider
     return [
       $this->item([
         "title" => "Log Management",
-        "icon" => "bi bi-bug",
+        "icon" => "bi bi-file-text-fill",
         "type" => "dropdown",
         "order" => 50,
         "children" => [
@@ -37,6 +37,13 @@ class LogMenuProvider extends BaseMenuProvider
             "route" => "admin.logs.app",
             "order" => 1,
             "permission" => Permission::VIEW_APP_LOGS,
+          ]),
+          $this->item([
+            "title" => "Auth Log",
+            "icon" => "bi bi-door-open",
+            "route" => "admin.logs.auth",
+            "order" => 2,
+            "permission" => Permission::VIEW_AUTH_LOGS,
           ]),
         ],
       ]),
