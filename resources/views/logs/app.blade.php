@@ -65,7 +65,7 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th style="min-width: 160px;">Waktu</th>
+                <th style="min-width: 100px;">Waktu</th>
                 <th style="min-width: 80px;">Env</th>
                 <th style="min-width: 80px;">Tipe</th>
                 <th style="min-width: 500px;">Pesan</th>
@@ -243,14 +243,29 @@
       return;
     }
 
-    logsTableBody.innerHTML = pageLogs.map(log => `
+    logsTableBody.innerHTML = pageLogs.map(log => {
+    let localTime = "";
+    if(log.timestamp) {
+    const utcDate = new Date(log.timestamp + 'Z');
+    if(!isNaN(utcDate)) {
+    localTime = utcDate.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+    });
+    } else {
+    localTime = log.timestamp.split(' ')[1] || '-';
+    }
+    }
+    return `
     <tr>
-    <td class="text-nowrap">${escapeHtml(log.timestamp)}</td>
+    <td class="text-nowrap">${escapeHtml(localTime)}</td>
     <td><span class="badge bg-secondary">${escapeHtml(log.env || '-')}</span></td>
     <td><span class="badge bg-${getLevelBadgeClass(log.type)}">${escapeHtml(log.type)}</span></td>
     <td class="text-break">${escapeHtml(log.message)}</td>
     </tr>
-    `).join('');
+    `;
+    }).join('');
   }
 
   // Helper untuk badge color
