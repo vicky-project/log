@@ -1,4 +1,4 @@
-@extends('coreui::layouts.admin')
+@ex tends('coreui::layouts.admin')
 @section('title', 'Log Viewer')
 
 @section('content')
@@ -245,7 +245,7 @@
 
     logsTableBody.innerHTML = pageLogs.map(log => {
     let localTime = "";
-    if(log.timestamp) {
+    if(!log.timestamp) {
     const utcDate = new Date(log.timestamp);
     if(!isNaN(utcDate)) {
     localTime = utcDate.toLocaleTimeString('id-ID', {
