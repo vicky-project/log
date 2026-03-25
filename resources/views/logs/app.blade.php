@@ -230,6 +230,16 @@
     renderPaginationControls();
   }
 
+  function extractTime(timestampStr) {
+    if (!timestampStr) return '-';
+    // Format yang diharapkan: "YYYY-MM-DD HH:MM:SS" atau "YYYY-MM-DD HH:MM:SS.micro"
+    const parts = timestampStr.split(' ');
+    if (parts.length < 2) return '-';
+    const timePart = parts[1];
+    // Ambil hanya HH:MM:SS (abaikan milidetik jika ada)
+    return timePart.split('.')[0];
+  }
+
   // -----------------------------------------------------------------
   // 6. Render halaman saat ini
   // -----------------------------------------------------------------
@@ -244,23 +254,10 @@
     }
 
     logsTableBody.innerHTML = pageLogs.map(log => {
-    let localTime = "";
-    if(!log.timestamp) {
-    const utcDate = new Date(log.timestamp);
-    if(!isNaN(utcDate)) {
-    localTime = utcDate.toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    timeZone: '{{ config("app.timezone") }}'
-    });
-    } else {
-    localTime = log.timestamp.split(' ')[1] || '-';
-    }
-    }
+    const timeDisplay = log.timestamp ? extractTime(log.timestamp) : '-';
     return `
     <tr>
-    <td class="text-nowrap">${escapeHtml(localTime)}</td>
+    <td class="text-nowrap">${escapeHtml(timeDisplay)}</td>
     <td><span class="badge bg-secondary">${escapeHtml(log.env || '-')}</span></td>
     <td><span class="badge bg-${getLevelBadgeClass(log.type)}">${escapeHtml(log.type)}</span></td>
     <td class="text-break">${escapeHtml(log.message)}</td>
