@@ -177,9 +177,9 @@
       const json = await response.json();
       if (!json.success) throw new Error(json.message || 'Failed to fetch');
       const logs = json.data.logs || [];
-      allLogs = logs;
+      allLogs = logs.reverse();
       // Perbarui dropdown environment berdasarkan data
-      updateEnvFilter(logs);
+      updateEnvFilter(allLogs);
       // Terapkan filter (awalnya tanpa filter)
       applyFilters();
     } catch (error) {
