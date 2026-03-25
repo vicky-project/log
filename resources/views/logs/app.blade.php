@@ -232,10 +232,20 @@
 
   function extractTime(timestampStr) {
     if (!timestampStr) return '-';
-    // Format yang diharapkan: "YYYY-MM-DD HH:MM:SS" atau "YYYY-MM-DD HH:MM:SS.micro"
+    // Format yang diharapkan: "YYYY-MM-DD HH:MM:SS" atau "YYYY-MM-DD HH:MM:SS"
     const parts = timestampStr.split(' ');
     if (parts.length < 2) return '-';
-    return parts[1];
+    const timeStringUTC = parts[1];
+
+    const today = new Date();
+    const datePart = today.toISOString().split('T')[0]; // Get today's date in 'YYYY-MM-DD' format
+
+    // Full UTC string for the Date constructor
+    const fullUTCString = `${datePart}T${timeStringUTC}Z`;
+
+    // Create a Date object, interpreted as UTC due to the 'Z'
+    const dateObj = new Date(fullUTCString);
+    return dateObj.toLocaleTimeString();
   }
 
   // -----------------------------------------------------------------
