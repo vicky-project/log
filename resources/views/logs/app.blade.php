@@ -237,7 +237,7 @@
     if (parts.length < 2) return '-';
     const timePart = parts[1];
     // Ambil hanya HH:MM:SS (abaikan milidetik jika ada)
-    return timePart.split('.')[0];
+    return timePart.split(':')[0];
   }
 
   // -----------------------------------------------------------------
