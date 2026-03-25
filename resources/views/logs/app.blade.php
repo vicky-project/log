@@ -1,4 +1,4 @@
-@ex tends('coreui::layouts.admin')
+@extends('coreui::layouts.admin')
 @section('title', 'Log Viewer')
 
 @section('content')
