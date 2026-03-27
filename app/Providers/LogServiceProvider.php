@@ -38,6 +38,7 @@ class LogServiceProvider extends ServiceProvider
     $this->app->register(RouteServiceProvider::class);
     $this->app->make("config")->set("logging.channels.local_daily", [
       "driver" => "monolog",
+      "handler" => \Modules\Log\Logging\LocalRotatingFileHandler::class,
       "with" => [
         "filename" => storage_path("logs/laravel.log"),
         "maxFiles" => 14,
