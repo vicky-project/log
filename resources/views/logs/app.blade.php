@@ -11,7 +11,7 @@
       <div class="card-body">
         <!-- Filter bar -->
         <div class="row mb-3 g-2">
-          <div class="col-12 col-sm-6">
+          <div class="col-12 col-sm-4">
             <div class="input-group">
               <label class="input-group-text" for="dateSelect">Tanggal</label>
               <select id="dateSelect" class="form-select">
@@ -19,7 +19,7 @@
               </select>
             </div>
           </div>
-          <div class="col-12 col-sm-3">
+          <div class="col-12 col-sm-2">
             <div class="input-group">
               <label class="input-group-text" for="levelSelect">Tipe</label>
               <select id="levelSelect" class="form-select">
@@ -35,12 +35,20 @@
               </select>
             </div>
           </div>
-          <div class="col-12 col-sm-3">
+          <div class="col-12 col-sm-2">
             <div class="input-group">
               <label class="input-group-text" for="envSelect">Env</label>
               <select id="envSelect" class="form-select">
                 <option value="">Semua</option>
               </select>
+            </div>
+          </div>
+          <div class="col-12 col-sm-4">
+            <div class="input-group">
+              <input type="text" id="searchInput" class="form-control" placeholder="Cari pesan...">
+              <button id="clearSearchBtn" class="btn btn-outline-secondary" type="button" style="display: none;">
+                <i class="bi bi-x-lg"></i>
+              </button>
             </div>
           </div>
         </div>
@@ -94,12 +102,15 @@
   let allLogs = []; // logs mentah dari API
   let filteredLogs = []; // setelah filter level & env
   let currentPage = 1;
+  let searchQuery = "";
   const rowsPerPage = 50;
 
   // DOM elements
   const dateSelect = document.getElementById('dateSelect');
   const levelSelect = document.getElementById('levelSelect');
   const envSelect = document.getElementById('envSelect');
+  const searchInput = document.getElementById('searchInput');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
   const logsTableBody = document.getElementById('logsTableBody');
   const paginationControls = document.getElementById('paginationControls');
   const loadingSpinner = document.getElementById('loadingSpinner');
@@ -165,6 +176,11 @@
     allLogs = [];
     filteredLogs = [];
     currentPage = 1;
+    // reset search
+    searchInput.value = '';
+    searchQuery = '';
+    clearSearchBtn.style.display = 'none';
+
     logsTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Memuat log...</td></tr>';
     paginationControls.innerHTML = '';
     resultCount.textContent = '';
@@ -212,16 +228,18 @@
   }
 
   // -----------------------------------------------------------------
-  // 5. Filter berdasarkan level dan env
+  // 5. Filter berdasarkan level, env, dan search query
   // -----------------------------------------------------------------
   function applyFilters() {
     const selectedLevel = levelSelect.value;
     const selectedEnv = envSelect.value;
+    const query = searchQuery.trim().toLowerCase();
 
     filteredLogs = allLogs.filter(log => {
     const matchesLevel = selectedLevel === '' || log.type === selectedLevel;
     const matchesEnv = selectedEnv === '' || log.env === selectedEnv;
-    return matchesLevel && matchesEnv;
+    const matchesSearch = query === '' || (log.message && log.message.toLowerCase().includes(query));
+    return matchesLevel && matchesEnv && matchesSearch;
     });
 
     resultCount.textContent = `Menampilkan ${filteredLogs.length} dari ${allLogs.length} log`;
@@ -378,6 +396,25 @@
   } else {
   await fetchAvailableDates();
   }
+  });
+
+  // Event listener untuk search input dengan debounce (opsional)
+  let searchTimeout;
+  searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+  searchQuery = searchInput.value;
+  applyFilters();
+  // Tampilkan tombol clear jika ada teks
+  clearSearchBtn.style.display = searchQuery ? 'inline-block' : 'none';
+  }, 300);
+  });
+  clearSearchBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  searchQuery = '';
+  applyFilters();
+  clearSearchBtn.style.display = 'none';
+  searchInput.focus();
   });
 
   // -----------------------------------------------------------------
