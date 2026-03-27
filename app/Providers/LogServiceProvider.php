@@ -37,13 +37,13 @@ class LogServiceProvider extends ServiceProvider
     $this->app->register(EventServiceProvider::class);
     $this->app->register(RouteServiceProvider::class);
     $this->app->make("config")->set("logging.channels.local_daily", [
-      "driver" => "daily",
-      "path" => storage_path("logs/laravel.log"),
+      "driver" => "monolog",
+      "with" => [
+        "filename" => storage_path("logs/laravel.log"),
+        "maxFiles" => 14,
+        "timezone" => env("APP_TIMEZONE", "Asia/Makassar")
+      ],
       "level" => env("LOG_LEVEL", "debug"),
-      "days" => 14,
-      "tap" => [
-        \Modules\Log\Logging\LocalTimezoneLogger::class
-      ]
     ]);
   }
 
