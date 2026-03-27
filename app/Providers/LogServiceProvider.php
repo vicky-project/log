@@ -42,7 +42,7 @@ class LogServiceProvider extends ServiceProvider
       "with" => [
         "filename" => storage_path("logs/laravel.log"),
         "maxFiles" => 14,
-        "timezone" => env("APP_TIMEZONE", "Asia/Makassar")
+        "timezone" => new \DateTimeZone(env("APP_TIMEZONE", "Asia/Makassar"))
       ],
       "level" => env("LOG_LEVEL", "debug"),
     ]);
