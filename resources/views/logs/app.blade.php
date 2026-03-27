@@ -253,7 +253,9 @@
     return matchesLevel && matchesEnv && matchesSearch;
     });
 
-    resultCount.textContent = `Menampilkan ${filteredLogs.length} dari ${allLogs.length} log`;
+    const showCount = filteredLogs.length < rowsPerPage ? filteredLogs.length: rowsPerPage;
+
+    resultCount.textContent = `Menampilkan ${showCount} dari ${allLogs.length} log`;
     currentPage = 1;
     renderCurrentPage();
     renderPaginationControls();
