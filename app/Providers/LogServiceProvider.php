@@ -45,6 +45,7 @@ class LogServiceProvider extends ServiceProvider
         "timezone" => new \DateTimeZone(env("APP_TIMEZONE", "Asia/Makassar"))
       ],
       "level" => env("LOG_LEVEL", "debug"),
+      "permission" => 0777
     ]);
   }
 
