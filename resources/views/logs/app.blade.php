@@ -120,6 +120,17 @@
   // Base API URL
   const apiUrl = 'https://vickyserver.my.id/app/admin/api/log-reader';
 
+  function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function highlightText(text, query) {
+    if (!query || !text) return escapeHtml(text);
+
+    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+    return escapeHtml(text).replace(regex, '<mark>$1</mark>');
+  }
+
   // -----------------------------------------------------------------
   // 1. Ambil daftar tanggal yang tersedia (tanpa parameter date)
   // -----------------------------------------------------------------
@@ -281,12 +292,13 @@
 
     logsTableBody.innerHTML = pageLogs.map(log => {
     const timeDisplay = log.timestamp ? extractTime(log.timestamp) : '-';
+    const messageHtml = highlightText(log.message, searchQuery);
     return `
     <tr>
     <td class="text-nowrap">${escapeHtml(timeDisplay)}</td>
     <td><span class="badge bg-secondary">${escapeHtml(log.env || '-')}</span></td>
     <td><span class="badge bg-${getLevelBadgeClass(log.type)}">${escapeHtml(log.type)}</span></td>
-    <td class="text-break">${escapeHtml(log.message)}</td>
+    <td class="text-break">${messageHtml}</td>
     </tr>
     `;
     }).join('');
@@ -439,10 +451,22 @@
     word-break: break-word;
     white-space: normal;
   }
+  mark {
+    background-color: #ffeb3b;
+    color: #000;
+    padding: 0 2px;
+    border-radius: 3px;
+  }
   /* Atur min-width kolom agar tidak terlalu sempit di mobile */
   @media (max-width: 576px) {
     .table th, .table td {
       white-space: normal;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    mark {
+      background-color: #ffc107;
+      color: #1a1a1a;
     }
   }
 </style>
