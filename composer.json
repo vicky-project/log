@@ -12,6 +12,7 @@
     "nwidart/laravel-modules": "^12.0",
     "joshbrw/laravel-module-installer": "^1.0",
     "jenssegers/agent": "^2.6",
+    "spatie/laravel-activitylog": "^4.10",
     "rappasoft/laravel-authentication-log": "^6.0",
     "haruncpi/laravel-log-reader": "^1.0",
     "vicky-project/users-module": "^1.0"
