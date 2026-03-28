@@ -23,6 +23,9 @@ class LocalRotatingFileHandler extends RotatingFileHandler
     if ($timezone === null) {
       $timezone = new DateTimeZone(date_default_timezone_get());
     }
+    if ($filePermission === null) {
+      $filePermission = 0777;
+    }
     parent::__construct($filename, $maxFiles, $level, $bubble, $filePermission, $useLocking, $dateFormat, $filenameFormat, $timezone);
   }
 
