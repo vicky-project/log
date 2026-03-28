@@ -31,7 +31,7 @@ class AuthLogController extends Controller
         "user_agent" => $agent->platform() . " - " . $agent->browser(),
         "location" =>
         $log->location && $log->location["default"] === false
-        ? $log->location["city"] . ", " . ($log->location["state"] ?? $log->location["district"])
+        ? $log->location["city"] . ", " . ($log->location["state_prov"] ?? $log->location["district"])
         : "-",
         "login_at" => $log->login_at
         ? $log->login_at->format("d-m-Y H:i:s")
