@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Log\Http\Controllers\AppLogController;
+use Modules\Log\Http\Controllers\ActivityLogController;
 use Modules\Log\Http\Controllers\AuthLogController;
 
 Route::prefix('admin')
@@ -13,5 +14,6 @@ Route::prefix('admin')
     Route::get('app', [AppLogController::class, 'index'])->name('app');
     Route::get('auth', [AuthLogController::class, 'index'])->name('auth');
     Route::get('auth/{auth_log}', [AuthLogController::class, 'show'])->name('auth.show');
+    Route::get("activity", [ActivityLogController::class, "index"])->name("activity");
   });
 });
