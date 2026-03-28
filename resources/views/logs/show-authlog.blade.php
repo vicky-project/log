@@ -34,7 +34,7 @@ $browser = $agent->platform() . " - " . $agent->browser();
       <li class="list-group-item d-flex justify-content-between align-items-center">
         <strong>Location</strong>
         <span class="text-muted">
-          {{$auth_log->location && $auth_log->location["default"] === false ? $auth_log->location["city"] . ", " . ($auth_log->location["state"] ?? $auth_log->location["district"]) : "-"}}
+          {{$auth_log->location && $auth_log->location["default"] === false ? $auth_log->location["city"] . ", " . ($auth_log->location["state_prov"] ?? $auth_log->location["district"]) : "-"}}
         </span>
       </li>
       <li class="list-group-item d-flex justify-content-between align-items-center">
