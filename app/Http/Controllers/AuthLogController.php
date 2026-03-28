@@ -50,7 +50,6 @@ class AuthLogController extends Controller
   * Show the specified resource.
   */
   public function show(AuthenticationLog $auth_log) {
-    dd($auth_log);
     return view("log::logs.show-authlog", compact("auth_log"));
   }
 }
