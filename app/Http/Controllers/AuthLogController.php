@@ -20,6 +20,7 @@ class AuthLogController extends Controller
         new Agent(),
         fn($agent) => $agent->setUserAgent($log->user_agent),
       );
+      dd($log, $agent);
       return [
         "id" => $log->id,
         "name" => $log->authenticatable ? $log->authenticatable->name : null,
