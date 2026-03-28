@@ -33,29 +33,29 @@ $isLocationDefault = $location['default'] ?? true;
       </div>
       <div class="card-body">
         <ul class="list-group list-group-flush">
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-person me-2 text-secondary"></i> Nama</span>
-            <span class="text-muted">{{ $auth_log->authenticatable->name ?? '-' }}</span>
+            <span class="text-muted text-break">{{ $auth_log->authenticatable->name ?? '-' }}</span>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-envelope me-2 text-secondary"></i> Email</span>
-            <span class="text-muted">{{ $auth_log->authenticatable->email ?? '-' }}</span>
+            <span class="text-muted text-break">{{ $auth_log->authenticatable->email ?? '-' }}</span>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-hdd-network me-2 text-secondary"></i> IP Address</span>
-            <code class="text-muted">{{ $auth_log->ip_address ?? '-' }}</code>
+            <code class="text-muted text-break">{{ $auth_log->ip_address ?? '-' }}</code>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-browser-chrome me-2 text-secondary"></i> Browser / Platform</span>
-            <span class="text-muted">{{ $browser }}</span>
+            <span class="text-muted text-break">{{ $browser }}</span>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-device-ssd me-2 text-secondary"></i> Nama Perangkat</span>
-            <span class="text-muted">{{ $auth_log->device_name ?? '-' }}</span>
+            <span class="text-muted text-break">{{ $auth_log->device_name ?? '-' }}</span>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-fingerprint me-2 text-secondary"></i> Device ID</span>
-            <span class="text-muted font-monospace small">{{ $auth_log->device_id ?? '-' }}</span>
+            <span class="text-muted font-monospace small text-break" style="word-break: break-all; max-width: 70%; text-align: right;">{{ $auth_log->device_id ?? '-' }}</span>
           </li>
         </ul>
       </div>
@@ -72,19 +72,19 @@ $isLocationDefault = $location['default'] ?? true;
       </div>
       <div class="card-body">
         <ul class="list-group list-group-flush">
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-box-arrow-in-right me-2 text-secondary"></i> Login Pada</span>
-            <span class="text-muted">{{ $auth_log->login_at ? $auth_log->login_at->format('d-m-Y H:i:s') : '-' }}</span>
+            <span class="text-muted text-break">{{ $auth_log->login_at ? $auth_log->login_at->format('d-m-Y H:i:s') : '-' }}</span>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-box-arrow-right me-2 text-secondary"></i> Logout Pada</span>
-            <span class="text-muted">{{ $auth_log->logout_at ? $auth_log->logout_at->format('d-m-Y H:i:s') : 'Masih aktif' }}</span>
+            <span class="text-muted text-break">{{ $auth_log->logout_at ? $auth_log->logout_at->format('d-m-Y H:i:s') : 'Masih aktif' }}</span>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-activity me-2 text-secondary"></i> Aktivitas Terakhir</span>
-            <span class="text-muted">{{ $auth_log->last_activity_at ? $auth_log->last_activity_at->format('d-m-Y H:i:s') : '-' }}</span>
+            <span class="text-muted text-break">{{ $auth_log->last_activity_at ? $auth_log->last_activity_at->format('d-m-Y H:i:s') : '-' }}</span>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-check-circle me-2 text-secondary"></i> Login Berhasil</span>
             <span>
               @if($auth_log->login_successful)
@@ -94,7 +94,7 @@ $isLocationDefault = $location['default'] ?? true;
               @endif
             </span>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-shield-check me-2 text-secondary"></i> Perangkat Terpercaya</span>
             <span>
               @if($auth_log->is_trusted)
@@ -104,7 +104,7 @@ $isLocationDefault = $location['default'] ?? true;
               @endif
             </span>
           </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-flag me-2 text-secondary"></i> Dicurigai</span>
             <span>
               @if($auth_log->is_suspicious)
@@ -115,12 +115,12 @@ $isLocationDefault = $location['default'] ?? true;
             </span>
           </li>
           @if($auth_log->suspicious_reason)
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-chat-text me-2 text-secondary"></i> Alasan Dicurigai</span>
-            <span class="text-muted small">{{ $auth_log->suspicious_reason }}</span>
+            <span class="text-muted small text-break">{{ $auth_log->suspicious_reason }}</span>
           </li>
           @endif
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap px-0">
             <span class="fw-semibold"><i class="bi bi-trash me-2 text-secondary"></i> Dihapus oleh User</span>
             <span>
               @if($auth_log->cleared_by_user)
@@ -151,26 +151,28 @@ $isLocationDefault = $location['default'] ?? true;
         {{-- Data lokasi lengkap dari IPGeolocation --}}
         <div class="row g-3">
           <div class="col-md-6">
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-globe me-1"></i> Negara:</span>
-              <span class="text-muted ms-2">{{ $location['country_name'] ?? $location['country'] ?? '-' }}</span>
-              @if(isset($location['country_flag']))
-              <img src="{{ $location['country_flag'] }}" alt="flag" width="20" class="ms-2">
-              @endif
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-globe me-1"></i> Negara:</span>
+              <span class="text-muted text-break">
+                {{ $location['country_name'] ?? $location['country'] ?? '-' }}
+                @if(isset($location['country_flag']))
+                <img src="{{ $location['country_flag'] }}" alt="flag" width="20" class="ms-2">
+                @endif
+              </span>
             </div>
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-building me-1"></i> Provinsi / Kota:</span>
-              <span class="text-muted ms-2">
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-building me-1"></i> Provinsi / Kota:</span>
+              <span class="text-muted text-break">
                 {{ ($location['state_prov'] ?? $location['state'] ?? '') . (isset($location['city']) ? ', ' . $location['city'] : '') }}
               </span>
             </div>
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-pin-map me-1"></i> Kode Pos:</span>
-              <span class="text-muted ms-2">{{ $location['zipcode'] ?? $location['postal_code'] ?? '-' }}</span>
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-pin-map me-1"></i> Kode Pos:</span>
+              <span class="text-muted text-break">{{ $location['zipcode'] ?? $location['postal_code'] ?? '-' }}</span>
             </div>
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-arrows-move me-1"></i> Koordinat:</span>
-              <span class="text-muted ms-2">
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-arrows-move me-1"></i> Koordinat:</span>
+              <span class="text-muted text-break">
                 @if(isset($location['latitude']) && isset($location['longitude']))
                 {{ $location['latitude'] }}, {{ $location['longitude'] }}
                 <a href="https://www.google.com/maps?q={{ $location['latitude'] }},{{ $location['longitude'] }}" target="_blank" class="ms-2 text-decoration-none">
@@ -188,13 +190,13 @@ $isLocationDefault = $location['default'] ?? true;
             </div>
           </div>
           <div class="col-md-6">
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-wifi me-1"></i> ISP / Koneksi:</span>
-              <span class="text-muted ms-2">{{ $location['isp'] ?? '-' }} ({{ $location['connection_type'] ?? '-' }})</span>
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-wifi me-1"></i> ISP / Koneksi:</span>
+              <span class="text-muted text-break">{{ $location['isp'] ?? '-' }} ({{ $location['connection_type'] ?? '-' }})</span>
             </div>
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-currency-dollar me-1"></i> Mata Uang:</span>
-              <span class="text-muted ms-2">
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-currency-dollar me-1"></i> Mata Uang:</span>
+              <span class="text-muted text-break">
                 @if(isset($location['currency']))
                 {{ $location['currency']['name'] ?? '-' }} ({{ $location['currency']['symbol'] ?? '' }})
                 @else
@@ -202,9 +204,9 @@ $isLocationDefault = $location['default'] ?? true;
                 @endif
               </span>
             </div>
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-clock me-1"></i> Zona Waktu:</span>
-              <span class="text-muted ms-2">
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-clock me-1"></i> Zona Waktu:</span>
+              <span class="text-muted text-break">
                 @if(isset($location['time_zone']))
                 {{ $location['time_zone']['name'] ?? '-' }} (UTC {{ $location['time_zone']['offset'] ?? 0 }})
                 @else
@@ -218,24 +220,24 @@ $isLocationDefault = $location['default'] ?? true;
         {{-- Data lokasi default (minimal) --}}
         <div class="row">
           <div class="col-md-6">
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-globe me-1"></i> Negara:</span>
-              <span class="text-muted ms-2">{{ $location['country'] ?? '-' }}</span>
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-globe me-1"></i> Negara:</span>
+              <span class="text-muted text-break">{{ $location['country'] ?? '-' }}</span>
               @if(isset($location['country_flag']))
               <img src="{{ $location['country_flag'] }}" alt="flag" width="20" class="ms-2">
               @endif
             </div>
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-building me-1"></i> Kota:</span>
-              <span class="text-muted ms-2">{{ $location['city'] ?? '-' }}</span>
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-building me-1"></i> Kota:</span>
+              <span class="text-muted text-break">{{ $location['city'] ?? '-' }}</span>
             </div>
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-pin-map me-1"></i> Provinsi:</span>
-              <span class="text-muted ms-2">{{ $location['state'] ?? $location['state_name'] ?? '-' }}</span>
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-pin-map me-1"></i> Provinsi:</span>
+              <span class="text-muted text-break">{{ $location['state'] ?? $location['state_name'] ?? '-' }}</span>
             </div>
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-arrows-move me-1"></i> Koordinat:</span>
-              <span class="text-muted ms-2">
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-arrows-move me-1"></i> Koordinat:</span>
+              <span class="text-muted text-break">
                 @if(isset($location['lat']) && isset($location['lon']))
                 {{ $location['lat'] }}, {{ $location['lon'] }}
                 <a href="https://www.google.com/maps?q={{ $location['lat'] }},{{ $location['lon'] }}" target="_blank" class="ms-2 text-decoration-none">
@@ -248,13 +250,13 @@ $isLocationDefault = $location['default'] ?? true;
             </div>
           </div>
           <div class="col-md-6">
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-currency-dollar me-1"></i> Mata Uang:</span>
-              <span class="text-muted ms-2">{{ $location['currency'] ?? '-' }}</span>
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-currency-dollar me-1"></i> Mata Uang:</span>
+              <span class="text-muted text-break">{{ $location['currency'] ?? '-' }}</span>
             </div>
-            <div class="mb-2">
-              <span class="fw-semibold"><i class="bi bi-clock me-1"></i> Zona Waktu:</span>
-              <span class="text-muted ms-2">{{ $location['timezone'] ?? '-' }}</span>
+            <div class="mb-2 d-flex flex-wrap">
+              <span class="fw-semibold me-2"><i class="bi bi-clock me-1"></i> Zona Waktu:</span>
+              <span class="text-muted text-break">{{ $location['timezone'] ?? '-' }}</span>
             </div>
           </div>
         </div>
@@ -274,7 +276,7 @@ $isLocationDefault = $location['default'] ?? true;
   <div class="col-12">
     <div class="alert alert-light border d-flex align-items-center" role="alert">
       <i class="bi bi-info-circle-fill me-2 text-primary"></i>
-      <small>Informasi perangkat dan lokasi diambil saat login. Data lokasi yang ditandai "default" menunjukkan informasi geolokasi terbatas.</small>
+      <small class="text-break">Informasi perangkat dan lokasi diambil saat login. Data lokasi yang ditandai "default" menunjukkan informasi geolokasi terbatas.</small>
     </div>
   </div>
 </div>
