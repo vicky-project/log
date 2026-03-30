@@ -255,11 +255,9 @@ class ScheduleMonitorController extends Controller
       'last_duration' => $lastLog ? $lastLog->duration : null,
       'last_run' => $lastLog ? $lastLog->created_at : null,
       'group' => $this->extractGroup($event),
-      'is_command_event' => $isCommandEvent,
+      'is_command_event' => !empty($event->command) && ($isCommandEvent || $isExecEvent),
       'is_exec_event' => $isExecEvent,
       'is_callback_event' => $isCallbackEvent,
-      // 🔥 Perubahan: Tombol Run aktif untuk CommandEvent DAN ExecEvent
-      'is_command' => !empty($event->command) && ($isCommandEvent || $isExecEvent),
     ];
   }
 
