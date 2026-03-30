@@ -52,6 +52,13 @@ class LogMenuProvider extends BaseMenuProvider
             "order" => 3,
             "permission" => Permission::VIEW_AUTH_LOGS,
           ]),
+          $this->item([
+            "title" => "Scheduler",
+            "icon" => "bi bi-calendar-check",
+            "route" => "admin.schedule-monitor.index",
+            "order" => 4,
+            "permission" => Permission::VIEW_SCHEDULE_MONITOR,
+          ]),
         ],
       ]),
     ];
