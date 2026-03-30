@@ -214,7 +214,7 @@
     document.getElementById('taskDetailBody').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><p>Loading...</p></div>';
     modal.show();
 
-    fetch(`{{ secure_url(config('app.url') }}/api/schedule-monitor/task-detail/${identifier}`)
+    fetch(`{{ secure_url(config('app.url')) }}/api/schedule-monitor/task-detail/${identifier}`)
     .then(response => response.json())
     .then(data => {
     let html = `
