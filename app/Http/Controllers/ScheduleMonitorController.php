@@ -1,8 +1,6 @@
 <?php
-
 namespace Modules\Log\Http\Controllers;
 
-use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
