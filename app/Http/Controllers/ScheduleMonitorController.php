@@ -40,7 +40,7 @@ class ScheduleMonitorController extends Controller
     ->whereNotNull('exit_code')
     ->count();
 
-    return view('schedule-monitor::index', compact('tasks', 'totalTasks', 'activeTasks', 'failedToday', 'groups'));
+    return view('log::schedule-monitor.index', compact('tasks', 'totalTasks', 'activeTasks', 'failedToday', 'groups'));
   }
 
   /**
@@ -55,7 +55,7 @@ class ScheduleMonitorController extends Controller
 
     $taskList = ScheduleLog::select('task_name')->distinct()->pluck('task_name', 'task_name')->toArray();
 
-    return view('schedule-monitor::logs', compact('logs', 'taskList', 'taskName'));
+    return view('log::schedule-monitor.logs', compact('logs', 'taskList', 'taskName'));
   }
 
   /**
