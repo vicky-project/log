@@ -258,7 +258,7 @@ class ScheduleMonitorController extends Controller
       'is_command_event' => $isCommandEvent,
       'is_exec_event' => $isExecEvent,
       'is_callback_event' => $isCallbackEvent,
-      'is_command' => !empty($event->command) && ($isCommandEvent || $isExecEvent),
+      'is_command' => !empty($event->command),
     ];
   }
 
