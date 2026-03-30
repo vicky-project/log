@@ -74,7 +74,6 @@ class ScheduleMonitorController extends Controller
     } elseif ($event instanceof ExecEvent) {
       return $this->runExecEvent($event);
     } else {
-      // CallbackEvent atau jenis lain tidak bisa dijalankan manual
       return response()->json(['success' => false, 'message' => 'Cannot run callback or custom event manually'], 400);
     }
   }
@@ -83,7 +82,9 @@ class ScheduleMonitorController extends Controller
   * Menjalankan CommandEvent (Artisan command)
   */
   protected function runCommandEvent(CommandEvent $event) {
-    $command = $event->command;
+    $rawCommand = $event->command;
+    $command = $this->extractArtisanCommand($rawCommand);
+
     $log = ScheduleLog::create([
       'task_name' => $this->getTaskName($event),
       'command' => $command,
@@ -262,7 +263,6 @@ class ScheduleMonitorController extends Controller
       }
     }
 
-    // Deteksi jenis event (untuk keperluan view)
     $isCommandEvent = $event instanceof CommandEvent;
     $isExecEvent = $event instanceof ExecEvent;
     $isCallbackEvent = $event instanceof CallbackEvent;
@@ -286,7 +286,6 @@ class ScheduleMonitorController extends Controller
       'is_exec_event' => $isExecEvent,
       'is_callback_event' => $isCallbackEvent,
       'is_command' => !empty($event->command) && $isCommandEvent,
-      // Hanya CommandEvent yang bisa dijalankan manual
     ];
   }
 
@@ -321,20 +320,14 @@ class ScheduleMonitorController extends Controller
 
   /**
   * Mendapatkan representasi command yang akan ditampilkan di UI
-  * Pendekatan cerdas: prioritaskan properti command, lalu khusus untuk CallbackEvent
+  * Versi yang sudah dibersihkan dari prefix '/usr/local/bin/php' 'artisan'
   */
   protected function getCommandDisplay(ScheduledEvent $event) {
-    // Jika event memiliki properti command (CommandEvent atau ExecEvent)
     if ($event->command) {
       $command = $event->command;
-      // Normalisasi command untuk menghilangkan 'php artisan' jika ada
-      if (str_starts_with($command, "'php artisan'")) {
-        $command = trim(str_replace("'php artisan'", '', $command));
-      }
-      return $command;
+      return $this->extractArtisanCommand($command);
     }
 
-    // Khusus untuk CallbackEvent
     if ($event instanceof CallbackEvent) {
       $summary = $event->getSummaryForDisplay();
       if (in_array($summary, ['Closure', 'Callback'])) {
@@ -343,7 +336,6 @@ class ScheduleMonitorController extends Controller
       return $summary;
     }
 
-    // Fallback: gunakan description atau expression
     return $event->description ?? $event->expression ?? 'Unknown';
   }
 
@@ -379,17 +371,11 @@ class ScheduleMonitorController extends Controller
   */
   protected function getTaskName(ScheduledEvent $event) {
     if ($event->command) {
-      $cmd = $event->command;
-      if (str_starts_with($cmd, "'php artisan'")) {
-        $cmd = trim(str_replace("'php artisan'", '', $cmd));
-      }
-      return $cmd;
+      return $this->extractArtisanCommand($event->command);
     }
-
     if ($event->description) {
       return $event->description;
     }
-
     return $event->expression ?? 'unknown';
   }
 
@@ -413,6 +399,27 @@ class ScheduleMonitorController extends Controller
       }
     }
     return null;
+  }
+
+  /**
+  * Ekstrak nama artisan command dari string yang mungkin memiliki prefix
+  * seperti '/usr/local/bin/php' 'artisan' atau 'php artisan'
+  */
+  protected function extractArtisanCommand($commandString) {
+    $commandString = trim($commandString);
+
+    // Pola: '/usr/local/bin/php' 'artisan' command
+    if (preg_match("/'?\/usr\/local\/bin\/php'?\s+'?artisan'?\s+(.*)/", $commandString, $matches)) {
+      return trim($matches[1]);
+    }
+
+    // Pola: 'php artisan' command
+    if (preg_match("/'?php'?\s+'?artisan'?\s+(.*)/", $commandString, $matches)) {
+      return trim($matches[1]);
+    }
+
+    // Jika tidak mengandung artisan, kembalikan asli
+    return $commandString;
   }
 
   /**
