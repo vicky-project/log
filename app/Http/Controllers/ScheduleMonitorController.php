@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Panlatent\CronExpressionDescriptor\ExpressionDescriptor;
 use Modules\Log\Models\ScheduleLog;
 
 class ScheduleMonitorController extends Controller
@@ -210,6 +211,7 @@ class ScheduleMonitorController extends Controller
     $repeatExpression = $event->isRepeatable() ? "{$event->repeatSeconds}s" : '';
     $command = $this->getCommandDisplay($event);
     $description = $event->description ?? '';
+    $humanExpression = $this->cronToHuman($event->expression);
 
     $identifier = $this->getTaskIdentifier($event);
     $taskName = $this->getTaskName($event);
@@ -237,6 +239,7 @@ class ScheduleMonitorController extends Controller
       'identifier' => $identifier,
       'name' => $taskName,
       'expression' => $event->expression,
+      "human_expression" => $humanExpression,
       'repeat' => $repeatExpression,
       'command' => $command,
       'description' => $description,
@@ -251,6 +254,18 @@ class ScheduleMonitorController extends Controller
       'has_command' => $hasCommand,
       'is_command' => $hasCommand,
     ];
+  }
+
+  protected function cronToHuman($expression) {
+    try {
+      return ExpressionDescriptor($expression)->getDescription();
+    } catch(\Exception $e) {
+      \Log::error("Failed to convert from cron expression to human readable.", [
+        "expression" => $expression,
+        "message" => $e->getMessage(),
+        "trace" => $e->getTraceAsString()
+      ]);
+    }
   }
 
   protected function getNextDueDateForEvent(ScheduledEvent $event, DateTimeZone $timezone) {
