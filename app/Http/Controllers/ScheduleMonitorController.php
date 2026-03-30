@@ -59,7 +59,7 @@ class ScheduleMonitorController extends Controller
       return response()->json(['success' => false, 'message' => 'Cannot run closure-based task manually'], 400);
     }
 
-    // Deteksi apakah ini command artisan (mengandung kata "artisan")
+    // Deteksi apakah command mengandung 'artisan'
     if (preg_match('/\bartisan\b/', $rawCommand)) {
       $artisanCommand = $this->extractArtisanCommand($rawCommand);
       return $this->runArtisanCommand($artisanCommand, $event);
@@ -231,7 +231,6 @@ class ScheduleMonitorController extends Controller
       }
     }
 
-    // Apakah event memiliki command? (closure tidak punya command)
     $hasCommand = !empty($event->command);
 
     return [
@@ -251,7 +250,6 @@ class ScheduleMonitorController extends Controller
       'group' => $this->extractGroup($event),
       'has_command' => $hasCommand,
       'is_command' => $hasCommand,
-      // untuk tombol run aktif
     ];
   }
 
@@ -283,10 +281,8 @@ class ScheduleMonitorController extends Controller
 
   protected function getCommandDisplay(ScheduledEvent $event) {
     if ($event->command) {
-      $command = $event->command;
-      return $this->extractArtisanCommand($command);
+      return $this->extractArtisanCommand($event->command);
     }
-
     return $event->description ?? 'Closure';
   }
 
@@ -315,9 +311,11 @@ class ScheduleMonitorController extends Controller
 
   protected function extractArtisanCommand($commandString) {
     $commandString = trim($commandString);
-    // Hapus tanda kutip
-    $cleaned = str_replace(["'", '"'], '', $commandString);
-    // Cari kata 'artisan' dan ambil sisa teks setelahnya
+    // Hapus tanda kutip di awal dan akhir string (jika ada)
+    $cleaned = preg_replace('/^[\'"]+|[\'"]+$/', '', $commandString);
+    // Hapus semua tanda kutip yang tersisa
+    $cleaned = str_replace(["'", '"'], '', $cleaned);
+    // Cari kata 'artisan' dan ambil teks setelahnya (termasuk parameter)
     if (preg_match('/\bartisan\s+(.+)/', $cleaned, $matches)) {
       return trim($matches[1]);
     }
