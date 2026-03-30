@@ -32,6 +32,7 @@ class ScheduleMonitorController extends Controller
   public function index() {
     $eventsData = $this->getEventsData();
     $tasks = $eventsData->toArray();
+    dd($tasks);
 
     $groups = $eventsData->groupBy('group')->map->count()->toArray();
     $totalTasks = count($tasks);
