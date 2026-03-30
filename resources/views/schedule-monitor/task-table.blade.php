@@ -52,12 +52,12 @@
     </td>
     <td>
       <div class="btn-group btn-group-sm" role="group" onclick="event.stopPropagation()">
-        @if($task['is_command'])
+        @if($task['is_command_event'])
         <button class="btn btn-outline-primary" onclick="runTask('{{ $task['identifier'] }}')" title="Run now">
           <i class="bi bi-play-fill"></i>
         </button>
         @else
-        <button class="btn btn-outline-secondary" disabled title="Cannot run closure tasks">
+        <button class="btn btn-outline-secondary" disabled title="Cannot run this type of task">
           <i class="bi bi-play-fill"></i>
         </button>
         @endif
