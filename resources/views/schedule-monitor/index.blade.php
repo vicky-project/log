@@ -3,35 +3,29 @@
 
 @push('styles')
 <style>
-  .task-card {
-    transition: all 0.2s ease;
-    cursor: pointer;
+  .schedule-table {
+    font-size: 0.9rem;
   }
-  .task-card:hover {
-    background-color: rgba(0,0,0,0.02);
+  .schedule-table .cron-expression {
+    font-family: monospace;
+    font-weight: 600;
+    color: #ffc107;
   }
-  .badge-status-success {
-    background-color: #198754;
-  }
-  .badge-status-failed {
-    background-color: #dc3545;
-  }
-  .badge-status-running {
-    background-color: #0dcaf0;
-  }
-  .badge-status-pending {
-    background-color: #6c757d;
-  }
-  .next-run-badge {
+  .schedule-table .repeat-badge {
     font-family: monospace;
     font-size: 0.8rem;
+    background: #6c757d;
+    color: white;
+    padding: 0 4px;
+    border-radius: 4px;
   }
-  .task-dependencies {
-    font-size: 0.7rem;
-    background: #e9ecef;
-    padding: 2px 6px;
-    border-radius: 12px;
-    display: inline-block;
+  .schedule-table .command-text {
+    font-family: monospace;
+    font-size: 0.85rem;
+    word-break: break-word;
+  }
+  .schedule-table .next-due {
+    white-space: nowrap;
   }
   .stat-card {
     transition: all 0.3s ease;
@@ -49,18 +43,44 @@
     justify-content: center;
     font-size: 1.5rem;
   }
+  .badge-status-success {
+    background-color: #198754;
+  }
+  .badge-status-failed {
+    background-color: #dc3545;
+  }
+  .badge-status-running {
+    background-color: #0dcaf0;
+  }
+  .badge-status-pending {
+    background-color: #6c757d;
+  }
+  .task-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .task-card:hover {
+    background-color: rgba(0,0,0,0.02);
+  }
+  @media (max-width: 768px) {
+    .schedule-table .command-text {
+      font-size: 0.75rem;
+    }
+    .btn-group-sm .btn {
+      padding: 0.2rem 0.4rem;
+    }
+  }
 </style>
 @endpush
 
 @section('content')
-<!-- Header -->
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
   <div>
     <h4 class="mb-0">
       <i class="bi bi-calendar-check me-2 text-primary"></i>Schedule Monitor
     </h4>
     <p class="text-muted small mt-1 mb-0">
-      Monitor dan kelola seluruh task terjadwal di aplikasi
+      Daftar semua task terjadwal di aplikasi
     </p>
   </div>
   <div class="mt-2 mt-sm-0">
@@ -70,7 +90,7 @@
   </div>
 </div>
 
-<!-- Statistik Ringkas -->
+<!-- Statistik -->
 <div class="row mb-4">
   <div class="col-md-3 col-sm-6 mb-3">
     <div class="card stat-card border-0 shadow-sm">
@@ -134,7 +154,7 @@
   </div>
 </div>
 
-<!-- Tabel Daftar Task -->
+<!-- Tabel Task -->
 <div class="card border-0 shadow-sm">
   <div class="card-header bg-white border-0 pt-4 pb-0">
     <ul class="nav nav-tabs card-header-tabs" id="taskTabs" role="tablist">
@@ -150,7 +170,6 @@
   </div>
   <div class="card-body p-0">
     <div class="tab-content">
-      <!-- Tab All Tasks -->
       <div class="tab-pane fade show active" id="all" role="tabpanel">
         <div class="table-responsive">
           @include('log::schedule-monitor.task-table', ['tasks' => $tasks])
@@ -178,7 +197,7 @@
       <div class="modal-body" id="taskDetailBody">
         <div class="text-center py-4">
           <div class="spinner-border text-primary"></div>
-          <p class="mt-2">
+          <p>
             Loading...
           </p>
         </div>
@@ -190,12 +209,12 @@
 
 @push('scripts')
 <script>
-  function showTaskDetail(taskIdentifier) {
+  function showTaskDetail(identifier) {
     const modal = new bootstrap.Modal(document.getElementById('taskDetailModal'));
     document.getElementById('taskDetailBody').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><p>Loading...</p></div>';
     modal.show();
 
-    fetch(`{{ secure_url(config('app.url')) }}/api/schedule-monitor/task-detail/${taskIdentifier}`)
+    fetch(`{{ secure_url(config('app.url') }}/api/schedule-monitor/task-detail/${identifier}`)
     .then(response => response.json())
     .then(data => {
     let html = `
@@ -204,20 +223,22 @@
     <h6>Task Information</h6>
     <table class="table table-sm">
     <tr><th>Name:</th><td>${data.task.name}</td></tr>
-    <tr><th>Label:</th><td>${data.task.label}</td></tr>
-    <tr><th>Group:</th><td>${data.task.group || '-'}</td></tr>
-    <tr><th>Schedule:</th><td><code>${data.task.schedule}</code></td></tr>
+    <tr><th>Expression:</th><td><code>${data.task.expression}</code></td></tr>
+    <tr><th>Repeat:</th><td>${data.task.repeat || '-'}</td></tr>
+    <tr><th>Command:</th><td class="font-monospace small">${data.task.command || '-'}</td></tr>
     <tr><th>Description:</th><td>${data.task.description || '-'}</td></tr>
+    <tr><th>Group:</th><td>${data.task.group}</td></tr>
     <tr><th>Enabled:</th><td>${data.task.enabled ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td></tr>
     </table>
     </div>
     <div class="col-md-6">
-    <h6>Last Execution</h6>
+    <h6>Execution Info</h6>
     <table class="table table-sm">
-    <tr><th>Started:</th><td>${data.task.last_run ? new Date(data.task.last_run).toLocaleString() : '-'}</td></tr>
-    <tr><th>Duration:</th><td>${data.task.last_duration ? data.task.last_duration + ' seconds' : '-'}</td></tr>
-    <tr><th>Status:</th><td><span class="badge bg-${data.task.last_status === 'success' ? 'success' : (data.task.last_status === 'failed' ? 'danger' : 'secondary')}">${data.task.last_status || '-'}</span></td></tr>
-    <tr><th>Next Run:</th><td>${data.task.next_run_human} (${new Date(data.task.next_run).toLocaleString()})</td></tr>
+    <tr><th>Last Run:</th><td>${data.task.last_run ? new Date(data.task.last_run).toLocaleString() : '-'}</td></tr>
+    <tr><th>Last Duration:</th><td>${data.task.last_duration ? data.task.last_duration + ' seconds' : '-'}</td></tr>
+    <tr><th>Last Status:</th><td><span class="badge bg-${data.task.status === 'success' ? 'success' : (data.task.status === 'failed' ? 'danger' : 'secondary')}">${data.task.status}</span></td></tr>
+    <tr><th>Next Due:</th><td>${data.task.next_due_human}<br><small>${new Date(data.task.next_due).toLocaleString()}</small></td></tr>
+    <tr><th>Has Mutex:</th><td>${data.task.has_mutex ? '<i class="bi bi-lock"></i> Yes' : 'No'}</td></tr>
     </table>
     </div>
     </div>
@@ -226,7 +247,7 @@
     <div style="max-height: 300px; overflow-y: auto;">
     ${data.recent_logs.length ? data.recent_logs.map(log => `
     <div class="border-bottom mb-2 pb-2">
-    <div class="small text-muted">${new Date(log.created_at).toLocaleString()}</div>
+    <div class="small text-muted">${new Date(log.created_at).toLocaleString()} (${log.triggered_by})</div>
     <div><strong>Exit Code:</strong> ${log.exit_code ?? '-'}</div>
     <pre class="small bg-light p-2 rounded" style="white-space: pre-wrap;">${log.output || log.error || '(no output)'}</pre>
     </div>
@@ -241,9 +262,9 @@
     });
   }
 
-  function runTask(taskIdentifier) {
+  function runTask(identifier) {
     if (!confirm('Run this task now?')) return;
-    fetch(`{{ secure_url(config('app.url')) }}/api/schedule-monitor/run/${taskIdentifier}`, {
+    fetch(`{{ secure_url(config('app.url')) }}/api/schedule-monitor/run/${identifier}`, {
       method: 'POST',
       headers: {
         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -259,8 +280,8 @@
     .catch(error => alert('Error: ' + error.message));
   }
 
-  function toggleTask(taskIdentifier) {
-    fetch(`{{ secure_url(config('app.url')) }}/api/schedule-monitor/toggle/${taskIdentifier}`, {
+  function toggleTask(identifier) {
+    fetch(`{{ secure_url(config('app.url')) }}/api/schedule-monitor/toggle/${identifier}`, {
       method: 'POST',
       headers: {
         'X-CSRF-TOKEN': '{{ csrf_token() }}',
