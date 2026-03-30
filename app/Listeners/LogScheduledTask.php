@@ -20,24 +20,29 @@ class LogScheduledTask
   }
 
   protected function handleStarting(ScheduledEvent $task) {
-    $taskId = $this->getTaskId($task);
+    $taskId = spl_object_hash($task);
     $this->startTimes[$taskId] = microtime(true);
 
+    $taskName = $this->getTaskName($task);
+    $command = $this->getCommandString($task);
+
     ScheduleLog::create([
-      'task_name' => $this->getTaskName($task),
-      'command' => $this->getCommandString($task),
+      'task_name' => $taskName,
+      'command' => $command,
       'started_at' => now(),
       'triggered_by' => 'schedule',
     ]);
   }
 
   protected function handleFinished(ScheduledEvent $task) {
-    $taskId = $this->getTaskId($task);
+    $taskId = spl_object_hash($task);
     $startTime = $this->startTimes[$taskId] ?? null;
     $duration = $startTime ? round(microtime(true) - $startTime, 2) : null;
 
+    $taskName = $this->getTaskName($task);
+
     // Cari log terakhir yang belum selesai untuk task ini
-    $log = ScheduleLog::where('task_name', $this->getTaskName($task))
+    $log = ScheduleLog::where('task_name', $taskName)
     ->whereNull('finished_at')
     ->latest('started_at')
     ->first();
@@ -55,45 +60,34 @@ class LogScheduledTask
     unset($this->startTimes[$taskId]);
   }
 
-  protected function getTaskId(ScheduledEvent $task) {
-    // Kombinasi unik untuk identifikasi task
-    return spl_object_hash($task);
-  }
-
   protected function getTaskName(ScheduledEvent $task) {
-    // Prioritas: command -> description -> expression
-    if ($task->command) {
-      // Contoh: 'backup:run' atau 'php artisan backup:run'
-      $command = trim($task->command);
-      if (str_starts_with($command, "'php artisan'")) {
-        $command = substr($command, strlen("'php artisan'") + 1);
-      }
-      return $command;
+    // Gunakan method yang sama seperti di controller untuk konsistensi
+    $rawCommand = $task->command ?? '';
+    if ($rawCommand) {
+      return $this->extractArtisanCommand($rawCommand);
     }
-
-    if ($task->description) {
-      return $task->description;
-    }
-
-    return $task->expression ?? 'unknown';
+    return $task->description ?? $task->expression ?? 'unknown';
   }
 
   protected function getCommandString(ScheduledEvent $task) {
-    // Menampilkan perintah lengkap untuk logging
-    if ($task->command) {
-      return $task->command;
-    }
-    if ($task->description) {
-      return $task->description;
-    }
-    return $task->expression ?? 'unknown';
+    return $task->command ?? $task->description ?? $task->expression ?? 'unknown';
   }
 
   protected function getOutput(ScheduledEvent $task) {
-    // Jika task mengirim output ke file, ambil sebagian isinya
     if ($task->output && file_exists($task->output)) {
       return file_get_contents($task->output, false, null, 0, 5000);
     }
     return null;
+  }
+
+  protected function extractArtisanCommand($commandString) {
+    $commandString = trim($commandString);
+    // Hapus tanda kutip di awal/akhir
+    $cleaned = preg_replace('/^[\'"]+|[\'"]+$/', '', $commandString);
+    $cleaned = str_replace(["'", '"'], '', $cleaned);
+    if (preg_match('/\bartisan\s+(.+)/', $cleaned, $matches)) {
+      return trim($matches[1]);
+    }
+    return $cleaned;
   }
 }
