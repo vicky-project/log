@@ -111,6 +111,12 @@ class ScheduleMonitorController extends Controller
         'output' => $output,
       ]);
     } catch (\Exception $e) {
+      \Log::error("Task failed execute", [
+        "command" => $command,
+        "task_name" => $this->getTaskName($event),
+        "message" => $e->getMessage(),
+        "trace" => $e->getTraceAsString()
+      ]);
       $log->update([
         'finished_at' => now(),
         'exit_code' => 1,
@@ -197,6 +203,7 @@ class ScheduleMonitorController extends Controller
   protected function getTaskName($event) {
     if ($event->command) {
       $cmd = $event->command;
+      dd($cmd);
       if (str_starts_with($cmd, "'php artisan'")) {
         $cmd = trim(str_replace("'php artisan'", '', $cmd));
       }
