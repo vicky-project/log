@@ -62,18 +62,15 @@ class ScheduleMonitorController extends Controller
       return response()->json(['success' => false, 'message' => 'No command to run'], 400);
     }
 
-    // Ekstrak nama command artisan jika ada (contoh: '/usr/local/bin/php' 'artisan' app:prayer -> app:prayer)
+    // Ekstrak nama command artisan (tanpa path php)
     $artisanCommand = $this->extractArtisanCommand($rawCommand);
 
-    // Cek apakah command tersebut adalah Artisan command yang valid
-    $allCommands = array_keys(Artisan::all());
-    if (in_array($artisanCommand, $allCommands)) {
-      // Jalankan dengan Artisan::call()
+    // Jika command mengandung 'artisan' (setelah ekstraksi mungkin tidak, tapi kita cek raw)
+    if (preg_match('/\bartisan\b/', $rawCommand)) {
       return $this->runArtisanCommand($artisanCommand, $event);
+    } else {
+      return $this->runShellCommand($rawCommand, $event);
     }
-
-    // Jika bukan artisan command, jalankan sebagai shell command
-    return $this->runShellCommand($rawCommand, $event);
   }
 
   protected function runArtisanCommand($command, ScheduledEvent $event) {
@@ -261,7 +258,7 @@ class ScheduleMonitorController extends Controller
       'is_command_event' => $isCommandEvent,
       'is_exec_event' => $isExecEvent,
       'is_callback_event' => $isCallbackEvent,
-      'is_command' => !empty($event->command)
+      'is_command' => !empty($event->command) && ($isCommandEvent || $isExecEvent),
     ];
   }
 
@@ -336,12 +333,14 @@ class ScheduleMonitorController extends Controller
 
   protected function extractArtisanCommand($commandString) {
     $commandString = trim($commandString);
-    // Cari pola 'artisan' diikuti oleh nama command (tanpa tanda kutip)
-    if (preg_match('/\bartisan\s+([^\s]+)/', $commandString, $matches)) {
+    // Hapus tanda kutip tunggal dan ganda
+    $cleaned = str_replace(["'", '"'], '', $commandString);
+    // Cari pola 'artisan' diikuti spasi dan sisa command (termasuk parameter)
+    if (preg_match('/\bartisan\s+(.+)/', $cleaned, $matches)) {
       return trim($matches[1]);
     }
-    // Jika tidak ada 'artisan', kemungkinan hanya nama command
-    return $commandString;
+    // Jika tidak ditemukan, kembalikan string yang sudah dibersihkan
+    return $cleaned;
   }
 
   protected function extractGroup(ScheduledEvent $event) {
