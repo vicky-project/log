@@ -3,7 +3,6 @@
 namespace Modules\Log\Http\Controllers;
 
 use Carbon\Carbon;
-use Closure;
 use Cron\CronExpression;
 use DateTimeZone;
 use Illuminate\Console\Scheduling\CallbackEvent;
@@ -16,8 +15,6 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Modules\Log\Models\ScheduleLog;
-use ReflectionClass;
-use ReflectionFunction;
 
 class ScheduleMonitorController extends Controller
 {
@@ -60,19 +57,26 @@ class ScheduleMonitorController extends Controller
       return response()->json(['success' => false, 'message' => 'Task not found'], 404);
     }
 
-    if ($event->command) {
-      return $this->runCommandEvent($event);
-    } elseif ($event instanceof ExecEvent) {
-      return $this->runExecEvent($event);
-    } else {
-      return response()->json(['success' => false, 'message' => 'Cannot run callback or custom event manually'], 400);
+    $rawCommand = $event->command ?? '';
+    if (empty($rawCommand)) {
+      return response()->json(['success' => false, 'message' => 'No command to run'], 400);
     }
+
+    // Ekstrak nama command artisan jika ada (contoh: '/usr/local/bin/php' 'artisan' app:prayer -> app:prayer)
+    $artisanCommand = $this->extractArtisanCommand($rawCommand);
+
+    // Cek apakah command tersebut adalah Artisan command yang valid
+    $allCommands = array_keys(Artisan::all());
+    if (in_array($artisanCommand, $allCommands)) {
+      // Jalankan dengan Artisan::call()
+      return $this->runArtisanCommand($artisanCommand, $event);
+    }
+
+    // Jika bukan artisan command, jalankan sebagai shell command
+    return $this->runShellCommand($rawCommand, $event);
   }
 
-  protected function runCommandEvent(CommandEvent $event) {
-    $rawCommand = $event->command;
-    $command = $this->extractArtisanCommand($rawCommand);
-
+  protected function runArtisanCommand($command, ScheduledEvent $event) {
     $log = ScheduleLog::create([
       'task_name' => $this->getTaskName($event),
       'command' => $command,
@@ -114,8 +118,7 @@ class ScheduleMonitorController extends Controller
     }
   }
 
-  protected function runExecEvent(ExecEvent $event) {
-    $command = $event->command;
+  protected function runShellCommand($command, ScheduledEvent $event) {
     $log = ScheduleLog::create([
       'task_name' => $this->getTaskName($event),
       'command' => $command,
@@ -255,9 +258,10 @@ class ScheduleMonitorController extends Controller
       'last_duration' => $lastLog ? $lastLog->duration : null,
       'last_run' => $lastLog ? $lastLog->created_at : null,
       'group' => $this->extractGroup($event),
-      'is_command_event' => !empty($event->command),
+      'is_command_event' => $isCommandEvent,
       'is_exec_event' => $isExecEvent,
       'is_callback_event' => $isCallbackEvent,
+      'is_command' => !empty($event->command) && ($isCommandEvent || $isExecEvent),
     ];
   }
 
@@ -296,36 +300,12 @@ class ScheduleMonitorController extends Controller
     if ($event instanceof CallbackEvent) {
       $summary = $event->getSummaryForDisplay();
       if (in_array($summary, ['Closure', 'Callback'])) {
-        return 'Closure at: ' . $this->getClosureLocation($event);
+        return 'Closure';
       }
       return $summary;
     }
 
     return $event->description ?? $event->expression ?? 'Unknown';
-  }
-
-  protected function getClosureLocation(CallbackEvent $event) {
-    $callback = (new ReflectionClass($event))->getProperty('callback')->getValue($event);
-
-    if ($callback instanceof Closure) {
-      $function = new ReflectionFunction($callback);
-      return sprintf(
-        '%s:%s',
-        str_replace(base_path() . DIRECTORY_SEPARATOR, '', $function->getFileName() ?: ''),
-        $function->getStartLine()
-      );
-    }
-
-    if (is_string($callback)) {
-      return $callback;
-    }
-
-    if (is_array($callback)) {
-      $className = is_string($callback[0]) ? $callback[0] : $callback[0]::class;
-      return sprintf('%s::%s', $className, $callback[1]);
-    }
-
-    return sprintf('%s::__invoke', $callback::class);
   }
 
   protected function getTaskName(ScheduledEvent $event) {
@@ -356,17 +336,11 @@ class ScheduleMonitorController extends Controller
 
   protected function extractArtisanCommand($commandString) {
     $commandString = trim($commandString);
-
-    // Pola: '/usr/local/bin/php' 'artisan' command
-    if (preg_match("/'?\/usr\/local\/bin\/php'?\s+'?artisan'?\s+(.*)/", $commandString, $matches)) {
+    // Cari pola 'artisan' diikuti oleh nama command (tanpa tanda kutip)
+    if (preg_match('/\bartisan\s+([^\s]+)/', $commandString, $matches)) {
       return trim($matches[1]);
     }
-
-    // Pola: 'php artisan' command
-    if (preg_match("/'?php'?\s+'?artisan'?\s+(.*)/", $commandString, $matches)) {
-      return trim($matches[1]);
-    }
-
+    // Jika tidak ada 'artisan', kemungkinan hanya nama command
     return $commandString;
   }
 
