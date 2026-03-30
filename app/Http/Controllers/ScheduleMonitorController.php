@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
-use Modules\ScheduleMonitor\Models\ScheduleLog;
+use Modules\Log\Models\ScheduleLog;
 use ReflectionClass;
 use ReflectionFunction;
 
