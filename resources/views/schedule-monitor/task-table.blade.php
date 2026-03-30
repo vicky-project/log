@@ -11,7 +11,12 @@
 <tbody>
   @forelse($tasks as $task)
   <tr class="task-card" onclick="showTaskDetail('{{ $task['identifier'] }}')">
-    <td><span class="cron-expression">{{ $task['expression'] }}</span></td>
+    <td>
+      <span class="cron-expression">{{ $task['expression'] }}</span>
+      <div class="small text-muted">
+        {{ $task["human_expression"] }}
+      </div>
+    </td>
     <td>@if($task['repeat'])<span class="repeat-badge">{{ $task['repeat'] }}</span>@else - @endif</td>
     <td>
       <div class="command-text">
