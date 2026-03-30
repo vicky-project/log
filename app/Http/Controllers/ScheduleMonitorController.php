@@ -330,16 +330,32 @@ class ScheduleMonitorController extends Controller
       if (!$this->outputIsVerbose()) {
         $command = $event->normalizeCommand($command);
       }
+      \Log::debug("Command event", [
+        "command" => $command,
+        "event" => $event
+      ]);
       return $command;
     } elseif ($event instanceof ExecEvent) {
+      \Log::debug("Command event", [
+        "command" => $event->command,
+        "event" => $event
+      ]);
       return $event->command ?? '';
     } elseif ($event instanceof CallbackEvent) {
       $command = $event->getSummaryForDisplay();
       if (in_array($command, ['Closure', 'Callback'])) {
         $command = 'Closure at: ' . $this->getClosureLocation($event);
       }
+      \Log::debug("Callback event", [
+        "command" => $command,
+        "event" => $event
+      ]);
       return $command;
     }
+    \Log::debug("Description event", [
+      "command" => $event->description,
+      "event" => $event
+    ]);
     return $event->description ?? 'Unknown';
   }
 
