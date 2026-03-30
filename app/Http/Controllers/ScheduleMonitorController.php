@@ -60,7 +60,7 @@ class ScheduleMonitorController extends Controller
       return response()->json(['success' => false, 'message' => 'Task not found'], 404);
     }
 
-    if ($event instanceof CommandEvent) {
+    if ($event->command) {
       return $this->runCommandEvent($event);
     } elseif ($event instanceof ExecEvent) {
       return $this->runExecEvent($event);
