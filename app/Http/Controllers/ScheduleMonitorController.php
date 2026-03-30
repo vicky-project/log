@@ -2,6 +2,7 @@
 
 namespace Modules\Log\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -213,7 +214,7 @@ class ScheduleMonitorController extends Controller
     $taskName = $this->getTaskName($event);
     $identifier = $this->getTaskIdentifier($event);
     $cron = CronExpression::factory($event->expression);
-    $nextRun = $cron->getNextRunDate();
+    $nextRun = Carbon::instance($cron->getNextRunDate());
     $nextRunHuman = $nextRun->diffForHumans();
 
     $lastLog = ScheduleLog::where('task_name', $taskName)
@@ -235,9 +236,6 @@ class ScheduleMonitorController extends Controller
       }
     }
 
-    // Ekstrak group dari command atau description
-    $group = $this->extractGroup($event);
-
     return [
       'identifier' => $identifier,
       'name' => $taskName,
@@ -246,7 +244,7 @@ class ScheduleMonitorController extends Controller
       'description' => $event->description,
       'schedule' => $event->expression,
       'timezone' => $event->timezone ?? config('app.timezone'),
-      'group' => $group,
+      'group' => $this->extractGroup($event),
       'enabled' => $enabled,
       'last_run' => $lastLog ? $lastLog->created_at : null,
       'last_status' => $status,
