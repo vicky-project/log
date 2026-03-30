@@ -27,9 +27,6 @@ class ScheduleMonitorController extends Controller
     $this->schedule = $schedule;
   }
 
-  /**
-  * Halaman utama
-  */
   public function index() {
     $eventsData = $this->getEventsData();
     $tasks = $eventsData->toArray();
@@ -45,9 +42,6 @@ class ScheduleMonitorController extends Controller
     return view('log::schedule-monitor.index', compact('tasks', 'totalTasks', 'activeTasks', 'failedToday', 'groups'));
   }
 
-  /**
-  * Halaman log eksekusi
-  */
   public function logs(Request $request) {
     $taskName = $request->get('task');
     $logs = ScheduleLog::query()
@@ -60,9 +54,6 @@ class ScheduleMonitorController extends Controller
     return view('log::schedule-monitor.logs', compact('logs', 'taskList', 'taskName'));
   }
 
-  /**
-  * Menjalankan task secara manual
-  */
   public function run(Request $request, $identifier) {
     $event = $this->findEventByIdentifier($identifier);
     if (!$event) {
@@ -78,9 +69,6 @@ class ScheduleMonitorController extends Controller
     }
   }
 
-  /**
-  * Menjalankan CommandEvent (Artisan command)
-  */
   protected function runCommandEvent(CommandEvent $event) {
     $rawCommand = $event->command;
     $command = $this->extractArtisanCommand($rawCommand);
@@ -126,9 +114,6 @@ class ScheduleMonitorController extends Controller
     }
   }
 
-  /**
-  * Menjalankan ExecEvent (shell command)
-  */
   protected function runExecEvent(ExecEvent $event) {
     $command = $event->command;
     $log = ScheduleLog::create([
@@ -174,9 +159,6 @@ class ScheduleMonitorController extends Controller
     }
   }
 
-  /**
-  * Toggle enable/disable (disimpan di cache)
-  */
   public function toggle($identifier) {
     $event = $this->findEventByIdentifier($identifier);
     if (!$event) {
@@ -196,9 +178,6 @@ class ScheduleMonitorController extends Controller
     return response()->json(['success' => true, 'enabled' => $enabled]);
   }
 
-  /**
-  * API detail task
-  */
   public function apiTaskDetail($identifier) {
     $event = $this->findEventByIdentifier($identifier);
     if (!$event) {
@@ -219,9 +198,6 @@ class ScheduleMonitorController extends Controller
 
   // ==================== Helper Methods ====================
 
-  /**
-  * Mengambil semua event yang dijadwalkan dan memformatnya
-  */
   protected function getEventsData() {
     $events = $this->schedule->events();
     $timezone = new DateTimeZone(config('app.timezone'));
@@ -234,9 +210,6 @@ class ScheduleMonitorController extends Controller
     return collect($data);
   }
 
-  /**
-  * Memformat satu event menjadi array data
-  */
   protected function formatEventData(ScheduledEvent $event, DateTimeZone $timezone) {
     $nextDueDate = $this->getNextDueDateForEvent($event, $timezone);
     $repeatExpression = $event->isRepeatable() ? "{$event->repeatSeconds}s" : '';
@@ -285,13 +258,11 @@ class ScheduleMonitorController extends Controller
       'is_command_event' => $isCommandEvent,
       'is_exec_event' => $isExecEvent,
       'is_callback_event' => $isCallbackEvent,
-      'is_command' => !empty($event->command) && $isCommandEvent,
+      // 🔥 Perubahan: Tombol Run aktif untuk CommandEvent DAN ExecEvent
+      'is_command' => !empty($event->command) && ($isCommandEvent || $isExecEvent),
     ];
   }
 
-  /**
-  * Mendapatkan next due date untuk event (mirip dengan schedule:list)
-  */
   protected function getNextDueDateForEvent(ScheduledEvent $event, DateTimeZone $timezone) {
     $nextDueDate = Carbon::instance(
       (new CronExpression($event->expression))
@@ -318,10 +289,6 @@ class ScheduleMonitorController extends Controller
     return $now->endOfSecond()->ceilSeconds($event->repeatSeconds);
   }
 
-  /**
-  * Mendapatkan representasi command yang akan ditampilkan di UI
-  * Versi yang sudah dibersihkan dari prefix '/usr/local/bin/php' 'artisan'
-  */
   protected function getCommandDisplay(ScheduledEvent $event) {
     if ($event->command) {
       $command = $event->command;
@@ -339,9 +306,6 @@ class ScheduleMonitorController extends Controller
     return $event->description ?? $event->expression ?? 'Unknown';
   }
 
-  /**
-  * Mendapatkan lokasi file closure (untuk CallbackEvent)
-  */
   protected function getClosureLocation(CallbackEvent $event) {
     $callback = (new ReflectionClass($event))->getProperty('callback')->getValue($event);
 
@@ -366,9 +330,6 @@ class ScheduleMonitorController extends Controller
     return sprintf('%s::__invoke', $callback::class);
   }
 
-  /**
-  * Mendapatkan nama task yang akan disimpan di log
-  */
   protected function getTaskName(ScheduledEvent $event) {
     if ($event->command) {
       return $this->extractArtisanCommand($event->command);
@@ -379,9 +340,6 @@ class ScheduleMonitorController extends Controller
     return $event->expression ?? 'unknown';
   }
 
-  /**
-  * Mendapatkan identifier unik untuk event (digunakan untuk toggle & run)
-  */
   protected function getTaskIdentifier(ScheduledEvent $event) {
     if ($event->command) {
       return md5($event->command);
@@ -389,9 +347,6 @@ class ScheduleMonitorController extends Controller
     return md5($event->description ?? $event->expression);
   }
 
-  /**
-  * Mencari event berdasarkan identifier
-  */
   protected function findEventByIdentifier($identifier) {
     foreach ($this->schedule->events() as $event) {
       if ($this->getTaskIdentifier($event) === $identifier) {
@@ -401,10 +356,6 @@ class ScheduleMonitorController extends Controller
     return null;
   }
 
-  /**
-  * Ekstrak nama artisan command dari string yang mungkin memiliki prefix
-  * seperti '/usr/local/bin/php' 'artisan' atau 'php artisan'
-  */
   protected function extractArtisanCommand($commandString) {
     $commandString = trim($commandString);
 
@@ -418,13 +369,9 @@ class ScheduleMonitorController extends Controller
       return trim($matches[1]);
     }
 
-    // Jika tidak mengandung artisan, kembalikan asli
     return $commandString;
   }
 
-  /**
-  * Ekstrak group dari event (untuk tab grouping)
-  */
   protected function extractGroup(ScheduledEvent $event) {
     $command = $this->getCommandDisplay($event);
     if (str_contains($command, ':')) {
