@@ -52,7 +52,7 @@
     </td>
     <td>
       <div class="btn-group btn-group-sm" role="group" onclick="event.stopPropagation()">
-        @if($task['is_command_event'])
+        @if($task['is_command'])
         <button class="btn btn-outline-primary" onclick="runTask('{{ $task['identifier'] }}')" title="Run now">
           <i class="bi bi-play-fill"></i>
         </button>
