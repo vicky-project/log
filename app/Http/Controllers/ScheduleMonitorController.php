@@ -5,10 +5,7 @@ namespace Modules\Log\Http\Controllers;
 use Carbon\Carbon;
 use Cron\CronExpression;
 use DateTimeZone;
-use Illuminate\Console\Scheduling\CallbackEvent;
-use Illuminate\Console\Scheduling\CommandEvent;
 use Illuminate\Console\Scheduling\Event as ScheduledEvent;
-use Illuminate\Console\Scheduling\ExecEvent;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -59,14 +56,12 @@ class ScheduleMonitorController extends Controller
 
     $rawCommand = $event->command ?? '';
     if (empty($rawCommand)) {
-      return response()->json(['success' => false, 'message' => 'No command to run'], 400);
+      return response()->json(['success' => false, 'message' => 'Cannot run closure-based task manually'], 400);
     }
 
-    // Ekstrak nama command artisan (tanpa path php)
-    $artisanCommand = $this->extractArtisanCommand($rawCommand);
-
-    // Jika command mengandung 'artisan' (setelah ekstraksi mungkin tidak, tapi kita cek raw)
+    // Deteksi apakah ini command artisan (mengandung kata "artisan")
     if (preg_match('/\bartisan\b/', $rawCommand)) {
+      $artisanCommand = $this->extractArtisanCommand($rawCommand);
       return $this->runArtisanCommand($artisanCommand, $event);
     } else {
       return $this->runShellCommand($rawCommand, $event);
@@ -236,9 +231,8 @@ class ScheduleMonitorController extends Controller
       }
     }
 
-    $isCommandEvent = $event instanceof CommandEvent;
-    $isExecEvent = $event instanceof ExecEvent;
-    $isCallbackEvent = $event instanceof CallbackEvent;
+    // Apakah event memiliki command? (closure tidak punya command)
+    $hasCommand = !empty($event->command);
 
     return [
       'identifier' => $identifier,
@@ -255,10 +249,9 @@ class ScheduleMonitorController extends Controller
       'last_duration' => $lastLog ? $lastLog->duration : null,
       'last_run' => $lastLog ? $lastLog->created_at : null,
       'group' => $this->extractGroup($event),
-      'is_command_event' => $isCommandEvent,
-      'is_exec_event' => $isExecEvent,
-      'is_callback_event' => $isCallbackEvent,
-      'is_command' => !empty($event->command),
+      'has_command' => $hasCommand,
+      'is_command' => $hasCommand,
+      // untuk tombol run aktif
     ];
   }
 
@@ -294,25 +287,14 @@ class ScheduleMonitorController extends Controller
       return $this->extractArtisanCommand($command);
     }
 
-    if ($event instanceof CallbackEvent) {
-      $summary = $event->getSummaryForDisplay();
-      if (in_array($summary, ['Closure', 'Callback'])) {
-        return 'Closure';
-      }
-      return $summary;
-    }
-
-    return $event->description ?? $event->expression ?? 'Unknown';
+    return $event->description ?? 'Closure';
   }
 
   protected function getTaskName(ScheduledEvent $event) {
     if ($event->command) {
       return $this->extractArtisanCommand($event->command);
     }
-    if ($event->description) {
-      return $event->description;
-    }
-    return $event->expression ?? 'unknown';
+    return $event->description ?? $event->expression ?? 'unknown';
   }
 
   protected function getTaskIdentifier(ScheduledEvent $event) {
@@ -333,13 +315,12 @@ class ScheduleMonitorController extends Controller
 
   protected function extractArtisanCommand($commandString) {
     $commandString = trim($commandString);
-    // Hapus tanda kutip tunggal dan ganda
+    // Hapus tanda kutip
     $cleaned = str_replace(["'", '"'], '', $commandString);
-    // Cari pola 'artisan' diikuti spasi dan sisa command (termasuk parameter)
+    // Cari kata 'artisan' dan ambil sisa teks setelahnya
     if (preg_match('/\bartisan\s+(.+)/', $cleaned, $matches)) {
       return trim($matches[1]);
     }
-    // Jika tidak ditemukan, kembalikan string yang sudah dibersihkan
     return $cleaned;
   }
 
