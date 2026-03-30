@@ -258,7 +258,7 @@ class ScheduleMonitorController extends Controller
 
   protected function cronToHuman($expression) {
     try {
-      return ExpressionDescriptor($expression)->getDescription();
+      return (new ExpressionDescriptor($expression))->getDescription();
     } catch(\Exception $e) {
       \Log::error("Failed to convert from cron expression to human readable.", [
         "expression" => $expression,
