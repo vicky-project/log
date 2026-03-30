@@ -1,4 +1,5 @@
 <?php
+
 namespace Modules\Log\Http\Controllers;
 
 use Carbon\Carbon;
@@ -32,7 +33,6 @@ class ScheduleMonitorController extends Controller
   public function index() {
     $eventsData = $this->getEventsData();
     $tasks = $eventsData->toArray();
-    dd($tasks);
 
     $groups = $eventsData->groupBy('group')->map->count()->toArray();
     $totalTasks = count($tasks);
@@ -69,11 +69,10 @@ class ScheduleMonitorController extends Controller
       return response()->json(['success' => false, 'message' => 'Task not found'], 404);
     }
 
-    // Tentukan jenis event
     if ($event instanceof CommandEvent) {
-      return $this->runCommandEvent($event, $identifier);
+      return $this->runCommandEvent($event);
     } elseif ($event instanceof ExecEvent) {
-      return $this->runExecEvent($event, $identifier);
+      return $this->runExecEvent($event);
     } else {
       // CallbackEvent atau jenis lain tidak bisa dijalankan manual
       return response()->json(['success' => false, 'message' => 'Cannot run callback or custom event manually'], 400);
@@ -83,7 +82,7 @@ class ScheduleMonitorController extends Controller
   /**
   * Menjalankan CommandEvent (Artisan command)
   */
-  protected function runCommandEvent(CommandEvent $event, $identifier) {
+  protected function runCommandEvent(CommandEvent $event) {
     $command = $event->command;
     $log = ScheduleLog::create([
       'task_name' => $this->getTaskName($event),
@@ -129,7 +128,7 @@ class ScheduleMonitorController extends Controller
   /**
   * Menjalankan ExecEvent (shell command)
   */
-  protected function runExecEvent(ExecEvent $event, $identifier) {
+  protected function runExecEvent(ExecEvent $event) {
     $command = $event->command;
     $log = ScheduleLog::create([
       'task_name' => $this->getTaskName($event),
@@ -142,7 +141,6 @@ class ScheduleMonitorController extends Controller
     try {
       $output = [];
       $exitCode = 0;
-      // Jalankan perintah dan tangkap output serta error
       exec($command . ' 2>&1', $output, $exitCode);
       $duration = microtime(true) - $startTime;
       $outputString = implode("\n", $output);
@@ -264,7 +262,7 @@ class ScheduleMonitorController extends Controller
       }
     }
 
-    // Deteksi jenis event
+    // Deteksi jenis event (untuk keperluan view)
     $isCommandEvent = $event instanceof CommandEvent;
     $isExecEvent = $event instanceof ExecEvent;
     $isCallbackEvent = $event instanceof CallbackEvent;
@@ -293,7 +291,7 @@ class ScheduleMonitorController extends Controller
   }
 
   /**
-  * Mendapatkan next due date untuk event
+  * Mendapatkan next due date untuk event (mirip dengan schedule:list)
   */
   protected function getNextDueDateForEvent(ScheduledEvent $event, DateTimeZone $timezone) {
     $nextDueDate = Carbon::instance(
@@ -323,47 +321,30 @@ class ScheduleMonitorController extends Controller
 
   /**
   * Mendapatkan representasi command yang akan ditampilkan di UI
+  * Pendekatan cerdas: prioritaskan properti command, lalu khusus untuk CallbackEvent
   */
   protected function getCommandDisplay(ScheduledEvent $event) {
-    if ($event instanceof CommandEvent) {
-      $command = $event->command ?? '';
-      if (!$this->outputIsVerbose()) {
-        $command = $event->normalizeCommand($command);
+    // Jika event memiliki properti command (CommandEvent atau ExecEvent)
+    if ($event->command) {
+      $command = $event->command;
+      // Normalisasi command untuk menghilangkan 'php artisan' jika ada
+      if (str_starts_with($command, "'php artisan'")) {
+        $command = trim(str_replace("'php artisan'", '', $command));
       }
-      \Log::debug("Command event", [
-        "command" => $command,
-        "event" => $event
-      ]);
-      return $command;
-    } elseif ($event instanceof ExecEvent) {
-      \Log::debug("Command event", [
-        "command" => $event->command,
-        "event" => $event
-      ]);
-      return $event->command ?? '';
-    } elseif ($event instanceof CallbackEvent) {
-      $command = $event->getSummaryForDisplay();
-      if (in_array($command, ['Closure', 'Callback'])) {
-        $command = 'Closure at: ' . $this->getClosureLocation($event);
-      }
-      \Log::debug("Callback event", [
-        "command" => $command,
-        "event" => $event
-      ]);
       return $command;
     }
-    \Log::debug("Description event", [
-      "command" => $event->description,
-      "event" => $event
-    ]);
-    return $event->description ?? 'Unknown';
-  }
 
-  /**
-  * Apakah output verbose (selalu false di web)
-  */
-  protected function outputIsVerbose() {
-    return false;
+    // Khusus untuk CallbackEvent
+    if ($event instanceof CallbackEvent) {
+      $summary = $event->getSummaryForDisplay();
+      if (in_array($summary, ['Closure', 'Callback'])) {
+        return 'Closure at: ' . $this->getClosureLocation($event);
+      }
+      return $summary;
+    }
+
+    // Fallback: gunakan description atau expression
+    return $event->description ?? $event->expression ?? 'Unknown';
   }
 
   /**
@@ -397,30 +378,26 @@ class ScheduleMonitorController extends Controller
   * Mendapatkan nama task yang akan disimpan di log
   */
   protected function getTaskName(ScheduledEvent $event) {
-    if ($event instanceof CommandEvent) {
+    if ($event->command) {
       $cmd = $event->command;
       if (str_starts_with($cmd, "'php artisan'")) {
         $cmd = trim(str_replace("'php artisan'", '', $cmd));
       }
       return $cmd;
-    } elseif ($event instanceof ExecEvent) {
-      $cmd = $event->command;
-      // Coba ekstrak jika mengandung artisan command
-      if (preg_match('/php artisan ([^\s]+)/', $cmd, $matches)) {
-        return $matches[1];
-      }
-      return 'exec:' . md5($cmd); // fallback
     }
-    return $event->description ?? $event->expression ?? 'unknown';
+
+    if ($event->description) {
+      return $event->description;
+    }
+
+    return $event->expression ?? 'unknown';
   }
 
   /**
   * Mendapatkan identifier unik untuk event (digunakan untuk toggle & run)
   */
   protected function getTaskIdentifier(ScheduledEvent $event) {
-    if ($event instanceof CommandEvent) {
-      return md5($event->command);
-    } elseif ($event instanceof ExecEvent) {
+    if ($event->command) {
       return md5($event->command);
     }
     return md5($event->description ?? $event->expression);
