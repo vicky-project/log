@@ -51,7 +51,7 @@
         Riwayat eksekusi task terjadwal dengan analisis statistik
       </p>
     </div>
-    <a href="{{ route('schedule-monitor.index') }}" class="btn btn-outline-secondary mt-2 mt-sm-0">
+    <a href="{{ route('admin.schedule-monitor.index') }}" class="btn btn-outline-secondary mt-2 mt-sm-0">
       <i class="bi bi-arrow-left me-1"></i> Back to Monitor
     </a>
   </div>
