@@ -236,7 +236,7 @@ class ScheduleMonitorController extends Controller
 
   protected function getEventsData() {
     $events = $this->schedule->events();
-    $timezone = new DateTimeZone(config('app.timezone'));
+    $timezone = new DateTimeZone(config('log.command_log.timezone', config('app.timezone')));
     $data = [];
 
     foreach ($events as $event) {
