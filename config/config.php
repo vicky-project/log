@@ -7,6 +7,6 @@ return [
     "timezone" => env("LOG_COMMAND_TIMEZONE", env("APP_TIMEZONE")),
   ],
   "pruning" => [
-    "retention_days" => env("LOG_RETENTION_DAYS", 5)
+    "retention_days" => env("LOG_RETENTION_DAYS", 30)
   ]
 ];
