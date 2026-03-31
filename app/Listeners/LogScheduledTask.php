@@ -20,80 +20,101 @@ class LogScheduledTask
   }
 
   protected function handleStarting(ScheduledEvent $task) {
-    $taskId = $this->getTaskId($task);
+    $taskId = spl_object_hash($task);
     $this->startTimes[$taskId] = microtime(true);
 
+    $taskName = $this->getTaskName($task);
+    $command = $this->getCommandString($task);
+
     ScheduleLog::create([
-      'task_name' => $this->getTaskName($task),
-      'command' => $this->getCommandString($task),
+      'task_name' => $taskName,
+      'command' => $command,
       'started_at' => now(),
       'triggered_by' => 'schedule',
     ]);
   }
 
   protected function handleFinished(ScheduledEvent $task) {
-    $taskId = $this->getTaskId($task);
+    $taskId = spl_object_hash($task);
     $startTime = $this->startTimes[$taskId] ?? null;
     $duration = $startTime ? round(microtime(true) - $startTime, 2) : null;
 
-    // Cari log terakhir yang belum selesai untuk task ini
-    $log = ScheduleLog::where('task_name', $this->getTaskName($task))
+    $taskName = $this->getTaskName($task);
+    $log = ScheduleLog::where('task_name', $taskName)
     ->whereNull('finished_at')
     ->latest('started_at')
     ->first();
 
     if ($log) {
+      $output = $this->getOutput($task);
+      $errorMessage = null;
+      if ($task->exitCode !== 0) {
+        // Ambil pesan error dari log Laravel (5 menit terakhir) sebagai fallback
+        $errorMessage = $this->getRecentErrorFromLog($taskName);
+        if (!$errorMessage) {
+          $errorMessage = "Task failed with exit code {$task->exitCode}. No additional output captured.";
+        }
+      }
+
       $log->update([
         'finished_at' => now(),
         'exit_code' => $task->exitCode,
         'duration' => $duration,
-        'output' => $this->getOutput($task),
-        'error' => $task->exitCode !== 0 ? 'Task failed with exit code ' . $task->exitCode : null,
+        'output' => $output,
+        'error' => $errorMessage,
       ]);
     }
-
     unset($this->startTimes[$taskId]);
   }
 
-  protected function getTaskId(ScheduledEvent $task) {
-    // Kombinasi unik untuk identifikasi task
-    return spl_object_hash($task);
+  protected function getRecentErrorFromLog($taskName) {
+    $logFile = storage_path('logs/laravel.log');
+    if (!file_exists($logFile)) return null;
+
+    $lines = file($logFile);
+    $relevantLines = [];
+    $searchTime = now()->subMinutes(5);
+    foreach (array_reverse($lines) as $line) {
+      if (preg_match('/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $line, $matches)) {
+        $lineTime = Carbon::parse($matches[1]);
+        if ($lineTime->lt($searchTime)) break;
+        if (str_contains($line, $taskName) || str_contains($line, 'error')) {
+          $relevantLines[] = trim($line);
+        }
+      }
+      if (count($relevantLines) >= 5) break;
+    }
+    return !empty($relevantLines) ? implode("\n", array_reverse($relevantLines)) : null;
   }
 
   protected function getTaskName(ScheduledEvent $task) {
-    // Prioritas: command -> description -> expression
-    if ($task->command) {
-      // Contoh: 'backup:run' atau 'php artisan backup:run'
-      $command = trim($task->command);
-      if (str_starts_with($command, "'php artisan'")) {
-        $command = substr($command, strlen("'php artisan'") + 1);
-      }
-      return $command;
+    // Gunakan method yang sama seperti di controller untuk konsistensi
+    $rawCommand = $task->command ?? '';
+    if ($rawCommand) {
+      return $this->extractArtisanCommand($rawCommand);
     }
-
-    if ($task->description) {
-      return $task->description;
-    }
-
-    return $task->expression ?? 'unknown';
+    return $task->description ?? $task->expression ?? 'unknown';
   }
 
   protected function getCommandString(ScheduledEvent $task) {
-    // Menampilkan perintah lengkap untuk logging
-    if ($task->command) {
-      return $task->command;
-    }
-    if ($task->description) {
-      return $task->description;
-    }
-    return $task->expression ?? 'unknown';
+    return $task->command ?? $task->description ?? $task->expression ?? 'unknown';
   }
 
   protected function getOutput(ScheduledEvent $task) {
-    // Jika task mengirim output ke file, ambil sebagian isinya
     if ($task->output && file_exists($task->output)) {
       return file_get_contents($task->output, false, null, 0, 5000);
     }
     return null;
+  }
+
+  protected function extractArtisanCommand($commandString) {
+    $commandString = trim($commandString);
+    // Hapus tanda kutip di awal/akhir
+    $cleaned = preg_replace('/^[\'"]+|[\'"]+$/', '', $commandString);
+    $cleaned = str_replace(["'", '"'], '', $cleaned);
+    if (preg_match('/\bartisan\s+(.+)/', $cleaned, $matches)) {
+      return trim($matches[1]);
+    }
+    return $cleaned;
   }
 }
