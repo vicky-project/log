@@ -32,7 +32,7 @@ class LogServiceProvider extends ServiceProvider
     $this->registerViews();
     $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
 
-    if (config(("log.command_log.enabled", false))) {
+    if (config("log.command_log.enabled", false)) {
       Event::listen(ScheduledTaskStarting::class, LogScheduledTask::class);
       Event::listen(ScheduledTaskFinished::class, LogScheduledTask::class);
     }
