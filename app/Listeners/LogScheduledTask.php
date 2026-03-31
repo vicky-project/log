@@ -1,7 +1,7 @@
 <?php
-
 namespace Modules\Log\Listeners;
 
+use Carbon\Carbon;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Console\Scheduling\Event as ScheduledEvent;
