@@ -1,12 +1,13 @@
 <?php
-
-namespace Modules\Log\Models;
 namespace Modules\Log\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 
 class ScheduleLog extends Model
 {
+  use Prunable;
+
   protected $table = 'schedule_logs';
 
   protected $fillable = [
@@ -27,6 +28,17 @@ class ScheduleLog extends Model
     'exit_code' => 'integer',
     'duration' => 'float',
   ];
+
+  /**
+  * Get the prunable model query.
+  *
+  * @return \Illuminate\Database\Eloquent\Builder<static>
+  */
+  public function prunable() {
+    $days = config("log.pruning.retention_days", 30);
+    return static::where("created_at", "<", now()->subDays($days));
+
+  }
 
   /**
   * Scope untuk log yang masih running (belum selesai)
