@@ -188,7 +188,7 @@
             <th style="min-width: 80px">Duration</th>
             <th style="min-width: 80px">Exit Code</th>
             <th style="min-width: 100px">Triggered By</th>
-            <th>Output / Error</th>
+            <th style="min-width: 200px;">Output / Error</th>
           </tr>
         </thead>
         <tbody>
