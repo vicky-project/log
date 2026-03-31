@@ -223,7 +223,7 @@
     <h6>Task Information</h6>
     <table class="table table-sm">
     <tr><th>Name:</th><td>${data.task.name}</td></tr>
-    <tr><th>Expression:</th><td><code>${data.task.expression}</code></td></tr>
+    <tr><th>Expression:</th><td><code>${data.task.expression}</code><br><small>${data.task.human_expression}</small></td></tr>
     <tr><th>Repeat:</th><td>${data.task.repeat || '-'}</td></tr>
     <tr><th>Command:</th><td class="font-monospace small">${data.task.command || '-'}</td></tr>
     <tr><th>Description:</th><td>${data.task.description || '-'}</td></tr>
