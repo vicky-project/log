@@ -68,7 +68,7 @@ class LogScheduledTask
   }
 
   protected function getRecentErrorFromLog($taskName) {
-    $logFile = storage_path('logs/laravel.log');
+    $logFile = storage_path('logs/laravel-' . date("Y-m-d") . '.log');
     if (!file_exists($logFile)) return null;
 
     $lines = file($logFile);
