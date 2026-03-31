@@ -35,7 +35,7 @@ class ScheduleLog extends Model
   * @return \Illuminate\Database\Eloquent\Builder<static>
   */
   public function prunable() {
-    if (config("log.prunning.enabled", true)) {
+    if (config("log.pruning.enabled", true)) {
       $days = config("log.prunning.retention_days");
       return static::where("created_at", "<", now()->subDays($days));
     }
