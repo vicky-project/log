@@ -3,10 +3,14 @@
 namespace Modules\Log\Providers;
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskStarting;
+use Modules\Log\Listeners\LogScheduledTask;
 
 class LogServiceProvider extends ServiceProvider
 {
@@ -27,6 +31,11 @@ class LogServiceProvider extends ServiceProvider
     $this->registerConfig();
     $this->registerViews();
     $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
+
+    if (config(("log.command_log.enabled", false))) {
+      Event::listen(ScheduledTaskStarting::class, LogScheduledTask::class);
+      Event::listen(ScheduledTaskFinished::class, LogScheduledTask::class);
+    }
   }
 
   /**

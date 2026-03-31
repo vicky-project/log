@@ -1,5 +1,8 @@
 <?php
 
 return [
-    'name' => 'Log',
+  'name' => 'Log',
+  "command_log" => [
+    "enabled" => env("LOG_COMMAND_ENABLED", true)
+  ]
 ];

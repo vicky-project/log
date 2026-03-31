@@ -2,10 +2,7 @@
 
 namespace Modules\Log\Providers;
 
-use Illuminate\Console\Events\ScheduledTaskFinished;
-use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Modules\Log\Listeners\LogScheduledTask;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -14,10 +11,7 @@ class EventServiceProvider extends ServiceProvider
   *
   * @var array<string, array<int, string>>
   */
-  protected $listen = [
-    ScheduledTaskStarting::class => [LogScheduledTask::class],
-    ScheduledTaskFinished::class => [LogScheduledTask::class]
-  ];
+  protected $listen = [];
 
   /**
   * Indicates if events should be discovered.
