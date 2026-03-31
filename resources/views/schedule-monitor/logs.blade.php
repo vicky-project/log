@@ -25,8 +25,11 @@
     height: 300px;
     width: 100%;
   }
+  .log-output-cell {
+    min-width: 350px;
+  }
   .log-output {
-    max-height: 100px;
+    max-height: 120px;
     overflow-y: auto;
     font-size: 0.75rem;
     white-space: pre-wrap;
@@ -82,7 +85,7 @@
   </div>
 </div>
 
-<!-- Statistik Cards (hanya jika ada data) -->
+<!-- Statistik Cards -->
 @if($stats['total_executions'] > 0)
 <div class="row mb-4">
   <div class="col-md-3 col-sm-6 mb-3">
@@ -183,20 +186,42 @@
         <thead class="table-light">
           <tr>
             <th style="min-width: 180px">Task</th>
-            <th style="min-width: 160px">Started At</th>
-            <th style="min-width: 160px">Finished At</th>
+            <th style="min-width: 120px">Started At</th>
+            <th style="min-width: 120px">Finished At</th>
             <th style="min-width: 80px">Duration</th>
-            <th style="min-width: 80px">Exit Code</th>
+            <th style="min-width: 100px">Exit Code</th>
             <th style="min-width: 100px">Triggered By</th>
-            <th style="min-width: 200px;">Output / Error</th>
+            <th style="min-width: 350px">Output / Error</th>
           </tr>
         </thead>
         <tbody>
           @forelse($logs as $log)
           <tr>
             <td class="fw-semibold">{{ $log->task_name }}</td>
-            <td class="small">{{ $log->started_at ? $log->started_at->format('d/m/Y H:i:s') : '-' }}</td>
-            <td class="small">{{ $log->finished_at ? $log->finished_at->format('d/m/Y H:i:s') : '-' }}</td>
+            <td class="small">
+              @if($log->started_at)
+              <div>
+                {{ $log->started_at->format('H:i:s') }}
+              </div>
+              <div class="text-muted">
+                {{ $log->started_at->format('d/m/Y') }}
+              </div>
+              @else
+              -
+              @endif
+            </td>
+            <td class="small">
+              @if($log->finished_at)
+              <div>
+                {{ $log->finished_at->format('H:i:s') }}
+              </div>
+              <div class="text-muted">
+                {{ $log->finished_at->format('d/m/Y') }}
+              </div>
+              @else
+              -
+              @endif
+            </td>
             <td class="small">{{ $log->duration ? number_format($log->duration,2).'s' : '-' }}</td>
             <td>
               @if($log->exit_code === 0)
@@ -214,14 +239,14 @@
               <span class="badge bg-secondary">Schedule</span>
               @endif
             </td>
-            <td>
+            <td class="log-output-cell">
               @if($log->output)
-              <div class="log-output text-muted">
-                {{ \Illuminate\Support\Str::limit($log->output, 300) }}
+              <div class="log-output bg-light p-2 rounded">
+                {{ \Illuminate\Support\Str::limit($log->output, 500) }}
               </div>
               @elseif($log->error)
-              <div class="log-output text-danger">
-                {{ \Illuminate\Support\Str::limit($log->error, 300) }}
+              <div class="log-output bg-danger bg-opacity-10 p-2 rounded text-danger">
+                {{ \Illuminate\Support\Str::limit($log->error, 500) }}
               </div>
               @else
               <span class="text-muted">-</span>
