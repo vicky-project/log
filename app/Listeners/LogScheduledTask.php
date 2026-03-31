@@ -40,24 +40,51 @@ class LogScheduledTask
     $duration = $startTime ? round(microtime(true) - $startTime, 2) : null;
 
     $taskName = $this->getTaskName($task);
-
-    // Cari log terakhir yang belum selesai untuk task ini
     $log = ScheduleLog::where('task_name', $taskName)
     ->whereNull('finished_at')
     ->latest('started_at')
     ->first();
 
     if ($log) {
+      $output = $this->getOutput($task);
+      $errorMessage = null;
+      if ($task->exitCode !== 0) {
+        // Ambil pesan error dari log Laravel (5 menit terakhir) sebagai fallback
+        $errorMessage = $this->getRecentErrorFromLog($taskName);
+        if (!$errorMessage) {
+          $errorMessage = "Task failed with exit code {$task->exitCode}. No additional output captured.";
+        }
+      }
+
       $log->update([
         'finished_at' => now(),
         'exit_code' => $task->exitCode,
         'duration' => $duration,
-        'output' => $this->getOutput($task),
-        'error' => $task->exitCode !== 0 ? 'Task failed with exit code ' . $task->exitCode : null,
+        'output' => $output,
+        'error' => $errorMessage,
       ]);
     }
-
     unset($this->startTimes[$taskId]);
+  }
+
+  protected function getRecentErrorFromLog($taskName) {
+    $logFile = storage_path('logs/laravel.log');
+    if (!file_exists($logFile)) return null;
+
+    $lines = file($logFile);
+    $relevantLines = [];
+    $searchTime = now()->subMinutes(5);
+    foreach (array_reverse($lines) as $line) {
+      if (preg_match('/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $line, $matches)) {
+        $lineTime = Carbon::parse($matches[1]);
+        if ($lineTime->lt($searchTime)) break;
+        if (str_contains($line, $taskName) || str_contains($line, 'error')) {
+          $relevantLines[] = trim($line);
+        }
+      }
+      if (count($relevantLines) >= 5) break;
+    }
+    return !empty($relevantLines) ? implode("\n", array_reverse($relevantLines)) : null;
   }
 
   protected function getTaskName(ScheduledEvent $task) {
