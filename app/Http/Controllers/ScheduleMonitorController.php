@@ -37,6 +37,9 @@ class ScheduleMonitorController extends Controller
     return view('log::schedule-monitor.index', compact('tasks', 'totalTasks', 'activeTasks', 'failedToday', 'groups'));
   }
 
+  /**
+  * Halaman log eksekusi dengan statistik dan chart
+  */
   public function logs(Request $request) {
     $taskName = $request->get('task');
     $logs = ScheduleLog::query()
@@ -46,7 +49,44 @@ class ScheduleMonitorController extends Controller
 
     $taskList = ScheduleLog::select('task_name')->distinct()->pluck('task_name', 'task_name')->toArray();
 
-    return view('log::schedule-monitor.logs', compact('logs', 'taskList', 'taskName'));
+    // Hitung statistik berdasarkan filter
+    $stats = [];
+    if ($taskName) {
+      // Statistik untuk task tertentu
+      $stats['task_name'] = $taskName;
+      $stats['total_executions'] = ScheduleLog::where('task_name', $taskName)->count();
+      $stats['success_count'] = ScheduleLog::where('task_name', $taskName)->where('exit_code', 0)->count();
+      $stats['failed_count'] = ScheduleLog::where('task_name', $taskName)->where('exit_code', '!=', 0)->whereNotNull('exit_code')->count();
+      $stats['success_rate'] = $stats['total_executions'] > 0 ? round(($stats['success_count'] / $stats['total_executions']) * 100, 2) : 0;
+      $stats['avg_duration'] = ScheduleLog::where('task_name', $taskName)->whereNotNull('duration')->avg('duration');
+      $stats['avg_duration'] = $stats['avg_duration'] ? round($stats['avg_duration'], 2) : 0;
+
+      // Data untuk chart (7 hari terakhir)
+      $labels = [];
+      $data = [];
+      for ($i = 6; $i >= 0; $i--) {
+        $date = Carbon::now()->subDays($i)->format('Y-m-d');
+        $labels[] = Carbon::now()->subDays($i)->format('d/m');
+        $count = ScheduleLog::where('task_name', $taskName)
+        ->whereDate('created_at', $date)
+        ->count();
+        $data[] = $count;
+      }
+      $stats['chart_labels'] = json_encode($labels);
+      $stats['chart_data'] = json_encode($data);
+    } else {
+      // Statistik untuk semua task
+      $stats['total_executions'] = ScheduleLog::count();
+      $stats['success_count'] = ScheduleLog::where('exit_code', 0)->count();
+      $stats['failed_count'] = ScheduleLog::where('exit_code', '!=', 0)->whereNotNull('exit_code')->count();
+      $stats['success_rate'] = $stats['total_executions'] > 0 ? round(($stats['success_count'] / $stats['total_executions']) * 100, 2) : 0;
+      $stats['avg_duration'] = ScheduleLog::whereNotNull('duration')->avg('duration');
+      $stats['avg_duration'] = $stats['avg_duration'] ? round($stats['avg_duration'], 2) : 0;
+      $stats['chart_labels'] = json_encode([]);
+      $stats['chart_data'] = json_encode([]);
+    }
+
+    return view('log::schedule-monitor.logs', compact('logs', 'taskList', 'taskName', 'stats'));
   }
 
   public function run(Request $request, $identifier) {
