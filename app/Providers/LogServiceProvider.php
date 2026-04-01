@@ -38,8 +38,6 @@ class LogServiceProvider extends ServiceProvider
       Event::listen(ScheduledTaskFinished::class, LogScheduledTask::class);
     }
 
-    $this->app->make("config")->set("log-viewer.back_to_system_url", config($this->nameLower . ".back_to_system_url"));
-
     Gate::define("viewLogViewer", function() {
       return auth()->id() === 1;
     });
