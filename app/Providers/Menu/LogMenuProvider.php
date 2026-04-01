@@ -41,7 +41,7 @@ class LogMenuProvider extends BaseMenuProvider
           $this->item([
             "title" => "Apps Log",
             "icon" => "bi bi-app",
-            "route" => "log-viewer",
+            "route" => "log-viewer.index",
             "order" => 2,
             "permission" => Permission::VIEW_APP_LOGS,
           ]),
