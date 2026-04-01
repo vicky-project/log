@@ -33,7 +33,9 @@ class TaskFailedNotification extends Notification
   public function via($notifiable): array
   {
     $channels = config("log.notifications.channels", "database");
-    return explode(",", trim($channels));
+    $channels = explode(",", trim($channels));
+
+    return !empty($channels) ? $channels : ["database"];
   }
 
   /**
