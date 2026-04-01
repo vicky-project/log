@@ -4,6 +4,7 @@ namespace Modules\Log\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
@@ -36,6 +37,10 @@ class LogServiceProvider extends ServiceProvider
       Event::listen(ScheduledTaskStarting::class, LogScheduledTask::class);
       Event::listen(ScheduledTaskFinished::class, LogScheduledTask::class);
     }
+
+    Gate::define("viewLogViewer", function() {
+      return auth()->id() === 1;
+    });
   }
 
   /**
