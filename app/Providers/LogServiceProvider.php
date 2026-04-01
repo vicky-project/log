@@ -55,6 +55,8 @@ class LogServiceProvider extends ServiceProvider
       ],
       "level" => env("LOG_LEVEL", "debug"),
     ]);
+
+    $this->app->make("config")->set("log-viewer.back_to_system_url", config("log.back_to_system_url"));
   }
 
   /**
