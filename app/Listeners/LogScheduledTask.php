@@ -6,6 +6,7 @@ use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Console\Scheduling\Event as ScheduledEvent;
 use Modules\Log\Models\ScheduleLog;
+use Modules\Log\Notifications\TaskFailedNotification;
 
 class LogScheduledTask
 {
@@ -53,6 +54,14 @@ class LogScheduledTask
         $errorMessage = $this->getRecentErrorFromLog($taskName);
         if (!$errorMessage) {
           $errorMessage = "Task failed with exit code {$task->exitCode}. No additional output captured.";
+        }
+
+        $userModel = config('auth.providers.users.model');
+        $admin config("log.notifications.user_id");
+        $users = explode(",", trim($admin));
+        foreach ($users as $userId) {
+          $user = $userModel::find($userId);
+          $user->notify(new TaskFailedNotification($taskName, $task->exitCode, $errorMessage));
         }
       }
 
