@@ -57,7 +57,7 @@ class LogScheduledTask
         }
 
         $userModel = config('auth.providers.users.model');
-        $admin config("log.notifications.user_id");
+        $admin = config("log.notifications.user_id");
         $users = explode(",", trim($admin));
         foreach ($users as $userId) {
           $user = $userModel::find($userId);
