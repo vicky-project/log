@@ -2,7 +2,6 @@
 
 return [
   'name' => 'Log',
-  "back_to_system_url" => (string) env("APP_URL") . "/admin/home",
   "command_log" => [
     "enabled" => env("LOG_COMMAND_ENABLED", true),
     "timezone" => env("LOG_COMMAND_TIMEZONE", env("APP_TIMEZONE")),
