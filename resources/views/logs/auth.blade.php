@@ -17,7 +17,13 @@
             </p>
           </div>
           <div class="mt-2 mt-sm-0">
-            <span class="badge bg-light text-dark">{{ $logs->total() ?? count($logs) }} total</span>
+            <span class="badge bg-light text-dark">
+              @if(method_exists($logs, 'total'))
+              {{ $logs->total() ?? count($logs) }} total
+              @else
+              0 total
+              @endif
+            </span>
           </div>
         </div>
       </div>
