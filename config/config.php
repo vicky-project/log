@@ -11,6 +11,6 @@ return [
   ],
   "notifications" => [
     "user_id" => env("LOG_NOTIFICATION_IDS", 1), // User Id in table users. Comma separated
-    "channels" => env("LOG_NOTIFICATION_CHANNELS", "database")
+    "channels" => (string) env ("LOG_NOTIFICATION_CHANNELS", "database")
   ]
 ];
