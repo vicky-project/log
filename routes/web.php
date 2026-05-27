@@ -15,7 +15,7 @@ Route::prefix('admin')
   ->group(function() {
     //Route::get('app', [AppLogController::class, 'index'])->name('app');
     Route::get('auth', [AuthLogController::class, 'index'])->name('auth');
-    Route::get('auth/{auth_log}', [AuthLogController::class, 'show'])->name('auth.show');
+    Route::get('auth/{authlog_id}', [AuthLogController::class, 'show'])->name('auth.show');
     Route::get("activity", [ActivityLogController::class, "index"])->name("activity");
   });
 
