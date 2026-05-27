@@ -11,7 +11,7 @@ class AuthLogController extends Controller
   * Display a listing of the resource.
   */
   public function index() {
-    $logs = '';
+    $logs = new stdClass();
     if (class_exists(\Rappasoft\LaravelAuthenticationLog\Models\AuthenticationLog::class)) {
       $logs = \Rappasoft\LaravelAuthenticationLog\Models\AuthenticationLog::with('authenticatable')
       ->latest("login_at")
