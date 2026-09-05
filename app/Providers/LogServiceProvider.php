@@ -69,7 +69,7 @@ class LogServiceProvider extends ServiceProvider
   protected function registerCommands(): void
   {
     $this->commands([
-      \Modules\Log\Console\CleanScheduleLogs::class
+      \Modules\Log\Console\CleanScheduleLogs::class,
       \Modules\Log\Console\ShowScheduleLogs::class
     ]);
   }
