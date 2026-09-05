@@ -13,7 +13,7 @@ class CleanScheduleLogs extends Command
   *
   * @var string
   */
-  protected $signature = 'log:clean
+  protected $signature = 'app:log-clean
                             {period? : Periode log yang akan dihapus (last-day, last-week, last-month, last-year)}
                             {--force : Lewati konfirmasi}';
 

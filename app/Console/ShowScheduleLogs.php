@@ -12,7 +12,7 @@ class ShowScheduleLogs extends Command
   *
   * @var string
   */
-  protected $signature = 'log:show
+  protected $signature = 'app:log
                             {--limit=10 : Jumlah baris log terakhir yang ditampilkan}
                             {--task= : Filter berdasarkan nama task}
                             {--status= : Filter status (success, failed, running, all)}
