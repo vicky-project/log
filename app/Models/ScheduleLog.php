@@ -1,12 +1,13 @@
 <?php
 namespace Modules\Log\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\MassPrunable;
 
 class ScheduleLog extends Model
 {
-  use Prunable;
+  use MassPrunable;
 
   protected $table = 'schedule_logs';
 
@@ -34,9 +35,10 @@ class ScheduleLog extends Model
   *
   * @return \Illuminate\Database\Eloquent\Builder<static>
   */
-  public function prunable() {
+  public function prunable(): Builder
+  {
     $days = config("log.pruning.retention_days", 30);
-    return static::where("created_at", "<", now()->subDays($days));
+    return static::where("created_at", "<=", now()->minus(days: $days));
 
   }
 
